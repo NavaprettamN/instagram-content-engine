@@ -1,0 +1,13 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+
+# Environment
+.env
+
+# Generated content
+/generated_content/
+/data/content_engine.db
+
+# VSCode settings
+.vscode/

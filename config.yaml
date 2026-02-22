@@ -1,0 +1,59 @@
+# Niche Configuration
+niche: "AI Productivity Tools"
+keywords:
+  - "AI tools"
+  - "productivity apps"
+  - "automation"
+  - "ChatGPT tips"
+  - "work smarter"
+
+brand_voice: >
+  Conversational and slightly witty. Uses short, punchy sentences.
+  Speaks like a knowledgeable friend who's genuinely excited about 
+  tech but doesn't talk down to people. Uses data and specific 
+  examples over vague claims. Occasionally uses humor but never 
+  at the audience's expense. Avoids corporate buzzwords.
+
+# Content Sources
+rss_feeds:
+  - "https://techcrunch.com/category/artificial-intelligence/feed/"
+  - "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
+  - "https://feeds.feedburner.com/TheHackersNews"
+  
+subreddits:
+  - "artificial"
+  - "productivity"
+  - "SideProject"
+  - "ChatGPT"
+
+# API Configuration
+azure_api_key: "${AZURE_OPENAI_KEY}"  # Load from .env
+azure_endpoint: "https://YOUR-RESOURCE.openai.azure.com/"
+azure_model_deployment: "gpt-4o"
+
+meta_access_token: "${META_ACCESS_TOKEN}"  # Load from .env
+instagram_user_id: "YOUR_IG_USER_ID"
+
+imgur_client_id: "${IMGUR_CLIENT_ID}"  # For image hosting
+
+# Database
+db_path: "./data/content_engine.db"
+
+# Design
+brand_colors:
+  background: "#1a1a2e"
+  secondary_bg: "#16213e"
+  text_primary: "#ffffff"
+  text_secondary: "#a0a0a0"
+  accent: "#e94560"
+
+font_bold: "./fonts/Inter-Bold.ttf"
+font_regular: "./fonts/Inter-Regular.ttf"
+
+output_dir: "./generated_content"
+
+# Publishing Schedule
+posting_times:
+  - "10:00"
+  - "18:00"
+posts_per_day: 2
