@@ -87,14 +87,14 @@ Prioritize HIGH engagement potential. Avoid generic advice. Every tip must be sp
         saved = []
         for idea in ideas.get("ideas", ideas):
             new_id = save_idea({
-                "content_type": idea["content_type"],
-                "hook": idea["hook"],
-                "outline": json.dumps(idea["outline"]),
-                "caption_draft": idea["caption_draft"],
-                "hashtags": json.dumps(idea["hashtags"]),
+                "content_type": idea.get("content_type", "carousel"),
+                "hook": idea.get("hook", ""),
+                "outline": json.dumps(idea.get("outline", [])),
+                "caption_draft": idea.get("caption_draft", ""),
+                "hashtags": json.dumps(idea.get("hashtags", [])),
                 "status": "pending_review",
                 "created_at": datetime.utcnow().isoformat(),
-                "engagement_estimate": idea.get("estimated_engagement", "medium"),
+                "engagement_estimate": idea.get("estimated_engagement", idea.get("engagement_estimate", "medium")),
             })
             saved.append(new_id)
         return saved
