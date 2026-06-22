@@ -133,7 +133,17 @@ elif page == "✅ Approval Center":
                         from agents.content_agent import ContentAgent
                         from agents.design_agent import DesignAgent
                         content = ContentAgent(config).generate_content(item)
-                        paths = DesignAgent(config).generate_carousel_images(content, item["id"])
+                        if item["content_type"] == "carousel":
+                            paths = DesignAgent(config).generate_carousel_images(content, item["id"])
+                        else:
+                            # For reels/static_image: generate a single cover slide from the hook
+                            cover_content = {
+                                "slide_1_hook": item["hook"],
+                                "slide_1_subtext": "Tap to learn more",
+                                "slides": [],
+                                "slide_final_cta": "Follow for more AI productivity tips",
+                            }
+                            paths = DesignAgent(config).generate_carousel_images(cover_content, item["id"])
                         update_idea(item["id"],
                                     generated_content=json.dumps(content),
                                     image_paths=json.dumps(paths),
@@ -217,24 +227,33 @@ elif page == "🚀 Run Agents":
             with st.spinner("Publishing..."):
                 from agents.publishing_agent import PublishingAgent
                 designed = get_ideas(status="designed")
-                if designed:
+                if not designed:
+                    st.warning("No designed content ready to publish.")
+                else:
                     post = designed[-1]  # oldest first
                     agent = PublishingAgent(config)
-                    paths = json.loads(post["image_paths"]) if post.get("image_paths") else []
-                    if post["content_type"] == "carousel" and len(paths) > 1:
-                        result = agent.publish_carousel(paths, post["caption_draft"])
-                    elif paths:
-                        result = agent.publish_single_image(paths[0], post["caption_draft"])
+                    raw_paths = post.get("image_paths") or "[]"
+                    paths = json.loads(raw_paths) if isinstance(raw_paths, str) else (raw_paths or [])
+
+                    if not paths:
+                        st.error(
+                            f"Post '{post['hook']}' has no images. "
+                            f"Go to Approval Center and click Generate to create slides."
+                        )
                     else:
-                        st.error("No images found for this post.")
-                        st.stop()
-                    update_idea(post["id"],
-                                status="published",
-                                published_at=datetime.utcnow().isoformat(),
-                                post_id=result.get("id"))
-                    st.success(f"Published: {post['hook']}")
-                else:
-                    st.warning("No designed content ready to publish.")
+                        if len(paths) > 1:
+                            result = agent.publish_carousel(paths, post["caption_draft"])
+                        else:
+                            result = agent.publish_single_image(paths[0], post["caption_draft"])
+
+                        if "error" in result:
+                            st.error(f"Instagram API error: {result['error'].get('message', result)}")
+                        else:
+                            update_idea(post["id"],
+                                        status="published",
+                                        published_at=datetime.utcnow().isoformat(),
+                                        post_id=result.get("id"))
+                            st.success(f"Published: {post['hook']}")
 
     with col4:
         st.subheader("📊 Analytics Agent")

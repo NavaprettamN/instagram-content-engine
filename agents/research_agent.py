@@ -36,6 +36,8 @@ class ResearchAgent:
             try:
                 url = f"https://www.reddit.com/r/{sub}/hot.json?limit=10"
                 resp = requests.get(url, headers={"User-Agent": "ContentResearchBot/1.0"}, timeout=10)
+                if not resp.ok or not resp.text.strip():
+                    continue
                 for post in resp.json()["data"]["children"]:
                     p = post["data"]
                     if p["score"] > 50:
@@ -70,6 +72,7 @@ For each idea provide:
 5. estimated_engagement: "high" / "medium" / "low" with reasoning
 6. hashtags: 8 relevant hashtags
 
+Return ONLY content_type "carousel". No reels. No static_image.
 Return as JSON: {{"ideas": [...]}}
 Prioritize HIGH engagement potential. Avoid generic advice. Every tip must be specific and actionable."""
 

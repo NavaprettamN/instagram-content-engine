@@ -14,7 +14,9 @@ class PublishingAgent:
         self.base_url = "https://graph.facebook.com/v19.0"
 
     def upload_image_to_hosting(self, image_path):
-        """Upload a local PNG to imgbb and return its public URL."""
+        """Return a public URL for the image — uploads local files to imgbb, passes URLs through."""
+        if str(image_path).startswith("http"):
+            return image_path  # already hosted (e.g. from a previous Actions run)
         with open(image_path, "rb") as f:
             resp = requests.post(
                 "https://api.imgbb.com/1/upload",
