@@ -2,5 +2,9 @@ streamlit
 requests
 numpy
 pandas
-sqlalchemy
 python-dotenv
+pyyaml
+feedparser
+Pillow
+google-genai
+supabase

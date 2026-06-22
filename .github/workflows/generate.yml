@@ -1,0 +1,56 @@
+name: Generate Agent — Content + Design
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"  # every 2 hours
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Generate content and designs for approved ideas
+        env:
+          GEMINI_API_KEY:      ${{ secrets.GEMINI_API_KEY }}
+          IMGBB_API_KEY:       ${{ secrets.IMGBB_API_KEY }}
+          SUPABASE_URL:        ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:        ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python -c "
+          import json, yaml
+          from agents.content_agent import ContentAgent
+          from agents.design_agent import DesignAgent
+          from agents.hashtag_agent import HashtagAgent
+          from agents.publishing_agent import PublishingAgent
+          from agents._db import get_ideas, update_idea
+
+          config = yaml.safe_load(open('config.yaml'))
+          ca = ContentAgent(config)
+          da = DesignAgent(config)
+          ha = HashtagAgent(config)
+          pa = PublishingAgent(config)
+
+          approved = get_ideas(status='approved')
+          for idea in approved:
+              if idea.get('generated_content'):
+                  continue  # already processed
+              print(f'Processing idea {idea[\"id\"]}: {idea[\"hook\"]}')
+              content = ca.generate_content(idea)
+              # Generate images and immediately upload to imgbb
+              local_paths = da.generate_carousel_images(content, idea['id'])
+              hosted_urls = [pa.upload_image_to_hosting(p) for p in local_paths]
+              update_idea(idea['id'],
+                          generated_content=json.dumps(content),
+                          image_paths=json.dumps(hosted_urls),
+                          status='designed')
+              print(f'  -> designed, {len(hosted_urls)} images hosted')
+          "

@@ -11,3 +11,10 @@ __pycache__/
 
 # VSCode settings
 .vscode/
+
+# macOS
+.DS_Store
+
+# Virtual environments
+venv/
+.venv/

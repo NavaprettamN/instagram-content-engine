@@ -1,0 +1,60 @@
+name: Publish Agent — Post to Instagram
+
+on:
+  schedule:
+    - cron: "0 10 * * *"   # 10:00 UTC daily
+    - cron: "0 18 * * *"   # 18:00 UTC daily
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Publish oldest designed post
+        env:
+          META_ACCESS_TOKEN:   ${{ secrets.META_ACCESS_TOKEN }}
+          INSTAGRAM_USER_ID:   ${{ secrets.INSTAGRAM_USER_ID }}
+          IMGBB_API_KEY:       ${{ secrets.IMGBB_API_KEY }}
+          SUPABASE_URL:        ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:        ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python -c "
+          import json, yaml
+          from datetime import datetime, timezone
+          from agents.publishing_agent import PublishingAgent
+          from agents._db import get_ideas, update_idea
+
+          config = yaml.safe_load(open('config.yaml'))
+          designed = get_ideas(status='designed')
+          if not designed:
+              print('No designed posts ready to publish.')
+              exit(0)
+
+          post = designed[-1]  # oldest first (list is newest-first, take last)
+          agent = PublishingAgent(config)
+          paths = json.loads(post['image_paths']) if post.get('image_paths') else []
+
+          print(f'Publishing: {post[\"hook\"]}')
+          if post['content_type'] == 'carousel' and len(paths) > 1:
+              result = agent.publish_carousel(paths, post['caption_draft'])
+          elif paths:
+              result = agent.publish_single_image(paths[0], post['caption_draft'])
+          else:
+              print('ERROR: no image paths found')
+              exit(1)
+
+          update_idea(post['id'],
+                      status='published',
+                      published_at=datetime.now(timezone.utc).isoformat(),
+                      post_id=result.get('id'))
+          print(f'Published! IG post ID: {result.get(\"id\")}')
+          "
