@@ -8,8 +8,10 @@ load_dotenv()
 
 class PublishingAgent:
     def __init__(self, config):
-        self.access_token = os.environ["META_ACCESS_TOKEN"]
-        self.ig_user_id = os.environ["INSTAGRAM_USER_ID"]
+        # ponytail: Meta creds read lazily — generate.yml only uses upload_image_to_hosting
+        # and shouldn't fail (or carry the 60-day Meta token) just to host images on imgbb.
+        self.access_token = os.environ.get("META_ACCESS_TOKEN")
+        self.ig_user_id = os.environ.get("INSTAGRAM_USER_ID")
         self.imgbb_api_key = os.environ["IMGBB_API_KEY"]
         self.base_url = "https://graph.facebook.com/v19.0"
 
@@ -26,7 +28,12 @@ class PublishingAgent:
         resp.raise_for_status()
         return resp.json()["data"]["url"]
 
+    def _require_meta(self):
+        if not self.access_token or not self.ig_user_id:
+            raise RuntimeError("META_ACCESS_TOKEN and INSTAGRAM_USER_ID must be set to publish.")
+
     def publish_single_image(self, image_path, caption):
+        self._require_meta()
         image_url = self.upload_image_to_hosting(image_path)
 
         container = requests.post(
@@ -44,6 +51,7 @@ class PublishingAgent:
         return result.json()
 
     def publish_carousel(self, image_paths, caption):
+        self._require_meta()
         children_ids = []
         for path in image_paths:
             image_url = self.upload_image_to_hosting(path)
@@ -78,6 +86,7 @@ class PublishingAgent:
         return result.json()
 
     def publish_reel(self, video_url, caption, cover_url=None):
+        self._require_meta()
         data = {
             "media_type": "REELS",
             "video_url": video_url,
