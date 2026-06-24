@@ -13,7 +13,8 @@ class PublishingAgent:
         self.access_token = os.environ.get("META_ACCESS_TOKEN")
         self.ig_user_id = os.environ.get("INSTAGRAM_USER_ID")
         self.imgbb_api_key = os.environ["IMGBB_API_KEY"]
-        self.base_url = "https://graph.facebook.com/v19.0"
+        # Instagram API with Instagram Login (IGAA token) — no Facebook Page needed.
+        self.base_url = "https://graph.instagram.com/v21.0"
 
     def upload_image_to_hosting(self, image_path):
         """Return a public URL for the image — uploads local files to imgbb, passes URLs through."""

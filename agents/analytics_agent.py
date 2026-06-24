@@ -14,7 +14,9 @@ class AnalyticsAgent:
     def __init__(self, config):
         self.access_token = os.environ["META_ACCESS_TOKEN"]
         self.ig_user_id = os.environ["INSTAGRAM_USER_ID"]
-        self.base_url = "https://graph.facebook.com/v19.0"
+        # Instagram API with Instagram Login. Note: insights metric names differ
+        # from the old Graph API — adjust get_*_insights if those calls error.
+        self.base_url = "https://graph.instagram.com/v21.0"
 
     def get_account_insights(self, period="day", days=7):
         metrics = "impressions,reach,follower_count,profile_views"
