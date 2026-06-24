@@ -35,7 +35,9 @@ class DesignAgent:
         try:
             font = ImageFont.truetype(self.fonts[font_type], font_size)
         except OSError:
-            font = ImageFont.load_default()
+            # ponytail: size-aware default (Pillow>=10.1) so a missing TTF still
+            # renders at the right scale instead of a ~10px bitmap.
+            font = ImageFont.load_default(size=font_size)
         
         wrapped = textwrap.fill(text, width=max_width)
         draw.multiline_text(position, wrapped, font=font, fill=color, 
