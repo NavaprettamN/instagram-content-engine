@@ -1,0 +1,34 @@
+name: Refresh Meta Token
+
+# Re-exchanges the long-lived Meta token monthly so publishing never dies at the
+# ~60-day expiry. Requires a GH_PAT secret (a PAT with `secrets: write` on this
+# repo) — GITHUB_TOKEN cannot update repo secrets.
+
+on:
+  schedule:
+    - cron: "0 3 1 * *"  # 03:00 UTC on the 1st of each month
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install requests python-dotenv
+
+      - name: Refresh token and update secret
+        env:
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          META_APP_ID:       ${{ secrets.META_APP_ID }}
+          META_APP_SECRET:   ${{ secrets.META_APP_SECRET }}
+          INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+          GH_TOKEN:          ${{ secrets.GH_PAT }}
+        run: |
+          NEW_TOKEN=$(python -m scripts.refresh_token)
+          if [ -z "$NEW_TOKEN" ]; then echo "No token returned"; exit 1; fi
+          echo "$NEW_TOKEN" | gh secret set META_ACCESS_TOKEN --repo "${{ github.repository }}"
+          echo "META_ACCESS_TOKEN updated."
