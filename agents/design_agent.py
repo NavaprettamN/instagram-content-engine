@@ -18,7 +18,24 @@ class DesignAgent:
             "bold": config.get("font_bold", "arial.ttf"),
             "regular": config.get("font_regular", "arial.ttf")
         }
+        self.handle = config.get("instagram_handle", "")
         os.makedirs(self.output_dir, exist_ok=True)
+
+    def add_footer(self, img, page_num, total_pages):
+        """Brand handle bottom-left, page counter bottom-right — on every slide."""
+        draw = ImageDraw.Draw(img)
+        try:
+            font = ImageFont.truetype(self.fonts["regular"], 28)
+        except OSError:
+            font = ImageFont.load_default(size=28)
+        color = self.brand_colors["text_secondary"]
+        y = img.height - 70
+        if self.handle:
+            draw.text((80, y), self.handle, font=font, fill=color)
+        counter = f"{page_num}/{total_pages}"
+        w = draw.textlength(counter, font=font)
+        draw.text((img.width - 80 - w, y), counter, font=font, fill=color)
+        return img
     
     def create_slide(self, width=1080, height=1080, bg_color=None):
         """Create a blank slide with background"""
@@ -49,7 +66,8 @@ class DesignAgent:
         slides = []
         idea_dir = os.path.join(self.output_dir, f"carousel_{idea_id}")
         os.makedirs(idea_dir, exist_ok=True)
-        
+        total_pages = 2 + len(carousel_content.get("slides", []))  # hook + content + cta
+
         # Slide 1: Hook slide
         img = self.create_slide()
         img = self.add_text(
@@ -74,6 +92,7 @@ class DesignAgent:
         draw.rectangle([80, 300, 300, 305], 
                        fill=self.brand_colors["accent"])
         
+        img = self.add_footer(img, 1, total_pages)
         path = os.path.join(idea_dir, "slide_01.png")
         img.save(path, quality=95)
         slides.append(path)
@@ -113,6 +132,7 @@ class DesignAgent:
                 max_width=35
             )
             
+            img = self.add_footer(img, i, total_pages)
             path = os.path.join(idea_dir, f"slide_{i:02d}.png")
             img.save(path, quality=95)
             slides.append(path)
@@ -135,6 +155,7 @@ class DesignAgent:
             font_type="regular"
         )
         
+        img = self.add_footer(img, total_pages, total_pages)
         path = os.path.join(idea_dir, f"slide_final.png")
         img.save(path, quality=95)
         slides.append(path)

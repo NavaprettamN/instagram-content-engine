@@ -3,7 +3,7 @@ import requests
 import json
 from datetime import datetime
 from agents._llm import generate_text
-from agents._db import save_idea
+from agents._db import save_idea, get_analytics
 
 
 class ResearchAgent:
@@ -57,12 +57,21 @@ class ResearchAgent:
             "popular_reddit_posts": reddit_ideas[:10],
         }, indent=2)
 
+        # Close the feedback loop: feed last week's AI analysis into idea generation.
+        snaps = get_analytics(limit=1)
+        learnings = ""
+        if snaps and snaps[0].get("analysis"):
+            learnings = (
+                "\nWHAT WORKED LAST WEEK (lean into these patterns, avoid what underperformed):\n"
+                f"{snaps[0]['analysis']}\n"
+            )
+
         prompt = f"""You are a content strategist for an Instagram page about {self.niche}.
 
 Here is today's research from trending articles and Reddit:
 
 {research_summary}
-
+{learnings}
 Based on this research AND your own knowledge, generate exactly 5 Instagram content ideas.
 For each idea provide:
 1. content_type: "carousel" or "reel" or "static_image"
