@@ -8,3 +8,4 @@ feedparser
 Pillow
 google-genai
 supabase
+pytrends

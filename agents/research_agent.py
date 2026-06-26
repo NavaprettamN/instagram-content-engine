@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 from agents._llm import generate_text
 from agents._db import save_idea, get_analytics
+from agents.trend_agent import TrendAgent
 
 
 class ResearchAgent:
@@ -51,10 +52,11 @@ class ResearchAgent:
                 print(f"Error fetching r/{sub}: {e}")
         return ideas
 
-    def generate_content_ideas(self, trends, reddit_ideas):
+    def generate_content_ideas(self, trends, reddit_ideas, platform_trends=None):
         research_summary = json.dumps({
             "trending_articles": trends[:10],
             "popular_reddit_posts": reddit_ideas[:10],
+            "platform_trends": platform_trends or {},
         }, indent=2)
 
         # Close the feedback loop: feed last week's AI analysis into idea generation.
@@ -68,11 +70,14 @@ class ResearchAgent:
 
         prompt = f"""You are a content strategist for an Instagram page about {self.niche}.
 
-Here is today's research from trending articles and Reddit:
+Here is today's research — trending articles, Reddit, and live platform trends
+(what's getting views/searches RIGHT NOW on YouTube, Google, and TikTok):
 
 {research_summary}
 {learnings}
 Based on this research AND your own knowledge, generate exactly 5 Instagram content ideas.
+Lean into the "platform_trends" — riding a currently-surging topic is the single
+biggest reach multiplier. Tie ideas to those trends wherever it's genuinely relevant.
 For each idea provide:
 1. content_type: "carousel" or "reel" or "static_image"
 2. hook: The first line/headline (max 8 words). Use a curiosity gap, a bold claim, or a number — it must stop the scroll and make people NEED the rest.
@@ -119,9 +124,12 @@ Prioritize HIGH engagement potential. Avoid generic advice. Every tip must be sp
         print("Research Agent: Gathering trends...")
         trends = self.gather_trends()
         reddit = self.gather_reddit_ideas()
+        platform_trends = TrendAgent(self.config).gather_trends()
+        print(f"Research Agent: platform trends "
+              f"{ {k: len(v) for k, v in platform_trends.items()} }")
 
         print("Research Agent: Generating content ideas...")
-        ideas = self.generate_content_ideas(trends, reddit)
+        ideas = self.generate_content_ideas(trends, reddit, platform_trends)
 
         print("Research Agent: Saving to database...")
         saved_ids = self.save_ideas_to_db(ideas)

@@ -54,6 +54,7 @@ reel_seconds_per_slide: 2.5
 # active hours (this timezone). Once analytics has data, AnalyticsAgent
 # reports the best-performing hours so these can be tuned.
 audience_timezone: "Asia/Kolkata"
+trend_region: "IN"   # YouTube trending region (ISO 3166)
 posting_times:
   - "08:00"
   - "14:00"

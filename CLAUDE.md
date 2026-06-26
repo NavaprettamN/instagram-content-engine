@@ -29,7 +29,8 @@ Fully automated Instagram content pipeline. No persistent server — all schedul
 
 ```
 research.yml (07:00 UTC daily)
-  RSS + Reddit → Gemini 2.5 Flash → 5 ideas
+  RSS + Reddit + TrendAgent (YouTube Data API + Google Trends + best-effort TikTok)
+  → Gemini 2.5 Flash → 5 ideas (told to ride surging platform trends)
   → Top 3 auto-approved (by estimated_engagement), rest → pending_review
   → Supabase: content_ideas
 
