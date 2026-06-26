@@ -4,9 +4,10 @@ name: Clip Agent — CC YouTube → Reel (weekly)
 # (CPU), and reframes/captions a segment with ffmpeg. Runs weekly to respect
 # Actions minutes + Whisper CPU cost. apt ffmpeg ensures libass (caption burn-in).
 
+# Manual-only: YouTube bot-blocks downloads from GitHub's datacenter IPs, so the
+# clipper is meant to run locally (residential IP) via `python -m scripts.clip_publish`.
+# This dispatch entry is kept for when a PO-token/proxy setup is added.
 on:
-  schedule:
-    - cron: "0 16 * * 0"   # Sunday 16:00 UTC
   workflow_dispatch:
 
 jobs:

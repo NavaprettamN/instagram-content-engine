@@ -50,14 +50,19 @@ class ClipAgent:
         # `python -m yt_dlp` (not the console script) so it works regardless of PATH.
         # android player_client downloads without a JS runtime or PO token — the
         # web/ios clients now 403 or need tokens. ponytail: YouTube fights
-        # downloaders, so this client choice may need revisiting if it breaks.
-        subprocess.run(
-            [sys.executable, "-m", "yt_dlp",
-             "--extractor-args", "youtube:player_client=android",
-             "-f", "best[ext=mp4][height<=720]/best[height<=720]/best",
-             "--no-playlist", "-o", out, url],
-            check=True, capture_output=True, text=True,
-        )
+        # downloaders (esp. from datacenter IPs), so this may break; run locally
+        # from a residential IP if CI gets bot-blocked.
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "yt_dlp",
+                 "--extractor-args", "youtube:player_client=android",
+                 "-f", "best[ext=mp4][height<=720]/best[height<=720]/best",
+                 "--no-playlist", "-o", out, url],
+                check=True, capture_output=True, text=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"yt-dlp failed (YouTube may be blocking this IP):\n"
+                               f"{e.stderr[-1500:]}") from e
         return out
 
     # ── transcribe ──────────────────────────────────────────────────
