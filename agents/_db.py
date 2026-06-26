@@ -47,6 +47,15 @@ def get_analytics(limit=10):
 def save_analytics(snapshot_dict):
     _get_client().table("analytics_snapshots").insert(snapshot_dict).execute()
 
+# ── config key-value store ─────────────────────────────────────────
+
+def get_config(key, default=None):
+    r = _get_client().table("config").select("value").eq("key", key).execute()
+    return r.data[0]["value"] if r.data else default
+
+def set_config(key, value):
+    _get_client().table("config").upsert({"key": key, "value": str(value)}).execute()
+
 # ── storage (video hosting for reels) ──────────────────────────────
 
 def upload_video(local_path, bucket="reels"):

@@ -4,8 +4,9 @@ import json
 import requests
 from datetime import datetime
 from dotenv import load_dotenv
+from collections import defaultdict
 from agents._llm import generate_text
-from agents._db import save_analytics
+from agents._db import save_analytics, set_config
 
 load_dotenv()
 
@@ -51,6 +52,33 @@ class AnalyticsAgent:
         )
         return resp.json()
 
+    def best_posting_hours(self, top_n=3, min_posts=20):
+        """Top UTC hours by avg engagement, rounded to even hours (publish.yml's
+        2h cadence). Returns [] until min_posts exist — too little data is noise."""
+        posts = self.get_recent_posts(limit=50)
+        data = posts.get("data", []) if isinstance(posts, dict) else (posts or [])
+        eng = defaultdict(list)
+        for p in data:
+            ts = p.get("timestamp")
+            if not ts:
+                continue
+            try:
+                hour = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S%z").hour
+            except ValueError:
+                continue
+            eng[hour].append((p.get("like_count") or 0) + (p.get("comments_count") or 0))
+        if sum(len(v) for v in eng.values()) < min_posts:
+            return []
+        ranked = sorted(eng, key=lambda h: sum(eng[h]) / len(eng[h]), reverse=True)
+        even = []
+        for h in ranked:
+            eh = h - (h % 2)  # map to even hour for the 2h cron
+            if eh not in even:
+                even.append(eh)
+            if len(even) >= top_n:
+                break
+        return even
+
     def generate_weekly_analysis(self, insights_data, posts_data):
         prompt = f"""Analyze this Instagram account's weekly performance:
 
@@ -88,5 +116,14 @@ Be specific. Use numbers. No vague advice."""
             "date": datetime.utcnow().date().isoformat(),
             "analysis": analysis,
         })
+
+        # Best-time optimizer: store top hours for publish.yml's adaptive gate.
+        hours = self.best_posting_hours()
+        if hours:
+            set_config("best_hours", json.dumps(hours))
+            print(f"Analytics Agent: best posting hours (UTC) -> {hours}")
+        else:
+            print("Analytics Agent: not enough post data yet for best-hours (using fallback slots)")
+
         print("Analytics Agent: Done.")
         return analysis

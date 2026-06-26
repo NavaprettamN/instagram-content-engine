@@ -2,9 +2,7 @@ name: Publish Agent — Post to Instagram
 
 on:
   schedule:
-    - cron: "0 8 * * *"    # 08:00 UTC daily
-    - cron: "0 14 * * *"   # 14:00 UTC daily
-    - cron: "0 20 * * *"   # 20:00 UTC daily
+    - cron: "0 */2 * * *"  # every 2h; the job gates to best/fallback hours + daily quota
   workflow_dispatch:
 
 jobs:
@@ -33,9 +31,26 @@ jobs:
           from datetime import datetime, timezone
           from agents.publishing_agent import PublishingAgent
           from agents.hashtag_agent import compose_caption
-          from agents._db import get_ideas, update_idea, count_ideas
+          from agents._db import get_ideas, update_idea, count_ideas, get_config
 
           config = yaml.safe_load(open('config.yaml'))
+
+          # Adaptive gate: post only in best hours (analytics) or fallback slots,
+          # and never exceed posts_per_day. Cron runs every 2h, so hours are even.
+          fallback = [int(t.split(':')[0]) for t in config.get('posting_times', ['08:00','14:00','20:00'])]
+          stored = get_config('best_hours')
+          target_hours = json.loads(stored) if stored else fallback
+          now = datetime.now(timezone.utc)
+          if now.hour not in target_hours:
+              print(f'Hour {now.hour} UTC not a posting window {target_hours}; skipping.')
+              exit(0)
+          today = now.date().isoformat()
+          posted_today = sum(1 for p in get_ideas(status='published')
+                             if (p.get('published_at') or '').startswith(today))
+          if posted_today >= config.get('posts_per_day', 3):
+              print(f'Daily quota reached ({posted_today}); skipping.')
+              exit(0)
+
           designed = get_ideas(status='designed')
           if not designed:
               print('No designed posts ready to publish.')
