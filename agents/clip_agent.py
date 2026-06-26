@@ -12,6 +12,7 @@ Heavy deps (yt-dlp, faster-whisper) and the Whisper CPU cost mean this runs
 sparingly (weekly clip.yml), capped to short-ish source videos.
 """
 import os
+import sys
 import subprocess
 import requests
 from agents._llm import generate_text
@@ -46,8 +47,14 @@ class ClipAgent:
 
     def download(self, url, out_base):
         out = f"{out_base}.mp4"
+        # `python -m yt_dlp` (not the console script) so it works regardless of PATH.
+        # android player_client downloads without a JS runtime or PO token — the
+        # web/ios clients now 403 or need tokens. ponytail: YouTube fights
+        # downloaders, so this client choice may need revisiting if it breaks.
         subprocess.run(
-            ["yt-dlp", "-f", "best[ext=mp4][height<=720]/best[height<=720]/best",
+            [sys.executable, "-m", "yt_dlp",
+             "--extractor-args", "youtube:player_client=android",
+             "-f", "best[ext=mp4][height<=720]/best[height<=720]/best",
              "--no-playlist", "-o", out, url],
             check=True, capture_output=True, text=True,
         )
