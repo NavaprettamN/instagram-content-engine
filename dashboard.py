@@ -112,7 +112,7 @@ elif page == "✅ Approval Center":
                 paths = json.loads(item["image_paths"]) if isinstance(item["image_paths"], str) else item["image_paths"]
                 img_cols = st.columns(min(len(paths), 4))
                 for idx, path in enumerate(paths):
-                    if os.path.exists(path):
+                    if path.startswith("http") or os.path.exists(path):  # imgbb URL or local file
                         with img_cols[idx % 4]:
                             st.image(path, width=250)
 

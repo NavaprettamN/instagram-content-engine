@@ -93,15 +93,22 @@ Prioritize HIGH engagement potential. Avoid generic advice. Every tip must be sp
         )
 
     def save_ideas_to_db(self, ideas):
+        # ponytail: auto-approve the best 3 ideas (matches the 3-posts/day cadence) so
+        # the pipeline runs hands-off; the rest stay pending_review as a backlog/override.
+        items = list(ideas.get("ideas", ideas))
+        rank = {"high": 0, "medium": 1, "low": 2}
+        items.sort(key=lambda i: rank.get(
+            str(i.get("estimated_engagement", i.get("engagement_estimate", "medium"))).lower().split()[0]
+            if (i.get("estimated_engagement") or i.get("engagement_estimate")) else "medium", 1))
         saved = []
-        for idea in ideas.get("ideas", ideas):
+        for n, idea in enumerate(items):
             new_id = save_idea({
                 "content_type": idea.get("content_type", "carousel"),
                 "hook": idea.get("hook", ""),
                 "outline": json.dumps(idea.get("outline", [])),
                 "caption_draft": idea.get("caption_draft", ""),
                 "hashtags": json.dumps(idea.get("hashtags", [])),
-                "status": "pending_review",
+                "status": "approved" if n < 3 else "pending_review",
                 "created_at": datetime.utcnow().isoformat(),
                 "engagement_estimate": idea.get("estimated_engagement", idea.get("engagement_estimate", "medium")),
             })
