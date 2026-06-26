@@ -48,6 +48,8 @@ output_dir: "./generated_content"
 # carousels. Reels get more reach but the API can't attach IG trending audio.
 reel_ratio: 0.4
 reel_seconds_per_slide: 2.5
+# Fallback Jamendo mood tags if the LLM mood pick fails (needs JAMENDO_CLIENT_ID).
+reel_music_tags: "upbeat,corporate"
 
 # ── Publishing Schedule ───────────────────────────────────────────
 # publish.yml cron is in UTC. Pick UTC slots that land in your audience's

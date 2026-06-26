@@ -22,6 +22,7 @@ jobs:
         env:
           GEMINI_API_KEY:      ${{ secrets.GEMINI_API_KEY }}
           IMGBB_API_KEY:       ${{ secrets.IMGBB_API_KEY }}
+          JAMENDO_CLIENT_ID:   ${{ secrets.JAMENDO_CLIENT_ID }}
           SUPABASE_URL:        ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY:        ${{ secrets.SUPABASE_KEY }}
         run: |
@@ -32,6 +33,7 @@ jobs:
           from agents.hashtag_agent import HashtagAgent
           from agents.publishing_agent import PublishingAgent
           from agents.video_agent import VideoAgent
+          from agents.music_agent import MusicAgent
           from agents._db import get_ideas, update_idea
 
           config = yaml.safe_load(open('config.yaml'))
@@ -40,6 +42,7 @@ jobs:
           ha = HashtagAgent(config)
           pa = PublishingAgent(config)
           va = VideoAgent(config)
+          ma = MusicAgent(config)
           reel_cut = round(config.get('reel_ratio', 0.4) * 5)  # ids with id%5 < cut -> reel
 
           approved = get_ideas(status='approved')
@@ -51,12 +54,17 @@ jobs:
               local_paths = da.generate_carousel_images(content, idea['id'])
               hashtag_sets = ha.generate_hashtag_sets(idea['hook'])  # 3 rotating sets
 
+              caption = idea.get('caption_draft') or ''
               as_reel = (idea['id'] % 5) < reel_cut
               if as_reel:
-                  reel = va.slides_to_reel(local_paths,
-                                           out_path=f'{config[\"output_dir\"]}/carousel_{idea[\"id\"]}/reel.mp4')
+                  base = f'{config[\"output_dir\"]}/carousel_{idea[\"id\"]}'
+                  music = ma.pick_track(idea['hook'], f'{base}/music.mp3')  # CC track or None
+                  reel = va.slides_to_reel(local_paths, out_path=f'{base}/reel.mp4',
+                                           audio_path=(music['path'] if music else None))
                   media = [pa.upload_video_to_hosting(reel)]
                   fmt = 'reel'
+                  if music:
+                      caption = (caption + '\n\n' + music['credit']).strip()  # CC attribution
               else:
                   media = [pa.upload_image_to_hosting(p) for p in local_paths]
                   fmt = 'carousel'
@@ -64,6 +72,7 @@ jobs:
                           generated_content=json.dumps(content),
                           image_paths=json.dumps(media),
                           hashtags=json.dumps(hashtag_sets),
+                          caption_draft=caption,
                           content_type=fmt,
                           status='designed')
               print(f'  -> designed as {fmt}, {len(media)} media hosted')

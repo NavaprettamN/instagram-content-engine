@@ -35,7 +35,9 @@ class VideoAgent:
         for p in image_paths:
             cmd += ["-loop", "1", "-t", str(dur), "-i", os.path.abspath(p)]
         if audio_path:
-            cmd += ["-i", os.path.abspath(audio_path)]
+            # loop the track so a short song can't truncate the slideshow;
+            # -shortest below then trims audio to the (finite) video length.
+            cmd += ["-stream_loop", "-1", "-i", os.path.abspath(audio_path)]
         else:
             cmd += ["-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100"]
 

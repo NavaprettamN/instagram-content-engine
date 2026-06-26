@@ -81,6 +81,8 @@ INSTAGRAM_USER_ID       # IG Business Account ID (numeric)
 IMGBB_API_KEY           # Image hosting (public URL required by Meta)
 SUPABASE_URL            # Supabase project URL
 SUPABASE_KEY            # Supabase service_role key (not anon)
+YOUTUBE_API_KEY         # YouTube Data API (TrendAgent) — free, 10k units/day
+JAMENDO_CLIENT_ID       # Jamendo API (MusicAgent reel music) — optional; unset = silent reels
 GH_PAT                  # GitHub PAT with secrets:write — only for refresh_token.yml
 META_APP_ID / META_APP_SECRET  # Legacy; not used by current publish/refresh flow
 ```
