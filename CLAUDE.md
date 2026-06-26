@@ -8,111 +8,84 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the Streamlit dashboard (primary interface)
+# Run the Streamlit dashboard (local dev)
 streamlit run dashboard.py
 
-# Manually trigger the research agent (generates 5 ideas → Supabase)
-python -c "
-import yaml
-from agents.research_agent import ResearchAgent
-config = yaml.safe_load(open('config.yaml'))
-ResearchAgent(config).run()
-"
+# One-shot full pipeline (research → generate → publish ONE post)
+python -m scripts.autopilot
 
-# Manually run generate pipeline for approved ideas
-python -c "
-import json, yaml
-from agents.content_agent import ContentAgent
-from agents.design_agent import DesignAgent
-from agents._db import get_ideas, update_idea
-config = yaml.safe_load(open('config.yaml'))
-for idea in get_ideas(status='approved'):
-    content = ContentAgent(config).generate_content(idea)
-    paths   = DesignAgent(config).generate_carousel_images(content, idea['id'])
-    update_idea(idea['id'], generated_content=json.dumps(content),
-                image_paths=json.dumps(paths), status='designed')
-"
+# Manually run any individual agent
+python -c "import yaml; from agents.research_agent import ResearchAgent; ResearchAgent(yaml.safe_load(open('config.yaml'))).run()"
+
+# Refresh the IGAA token and print to stdout (used by refresh_token.yml)
+python -m scripts.refresh_token
 ```
 
 ## Architecture
 
-A multi-agent Instagram automation system with a human-in-the-loop approval workflow. AI generates ideas and carousel images → human approves via dashboard → system publishes on schedule.
+Fully automated Instagram content pipeline. No persistent server — all scheduling is GitHub Actions cron.
 
-### Pipeline
+### Pipeline (fully hands-off)
 
 ```
-ResearchAgent (07:00 UTC daily via GitHub Actions)
-  → RSS + Reddit → Gemini 2.5 Flash → 5 ideas → Supabase: pending_review
+research.yml (07:00 UTC daily)
+  RSS + Reddit → Gemini 2.5 Flash → 5 ideas
+  → Top 3 auto-approved (by estimated_engagement), rest → pending_review
+  → Supabase: content_ideas
 
-[Human approves in Streamlit dashboard]
-
-ContentAgent + DesignAgent (every 2h via GitHub Actions)
-  → Gemini → carousel JSON structure
-  → Pillow → 7-8 PNG slides (1080×1080) → uploaded to imgbb
+generate.yml (every 2h)
+  approved ideas without generated_content
+  → ContentAgent (Gemini JSON) + DesignAgent (Pillow PNGs, 1080×1080)
+  → PublishingAgent.upload_image_to_hosting() → imgbb public URLs
   → Supabase: status=designed, image_paths=[imgbb URLs]
 
-PublishingAgent (10:00 + 18:00 UTC via GitHub Actions)
-  → Meta Graph API v19.0 → carousel post on Instagram
-  → Supabase: status=published, post_id=<IG media ID>
+publish.yml (08:00 / 14:00 / 20:00 UTC)
+  oldest designed post
+  → PublishingAgent.publish_carousel() → Instagram API
+  → Supabase: status=published, post_id
 
-AnalyticsAgent (Sunday 20:00 UTC via GitHub Actions)
-  → Meta API metrics → Gemini analysis → Supabase analytics_snapshots
+analytics.yml (Sunday 20:00 UTC)
+  Meta media insights → Gemini weekly analysis → Supabase: analytics_snapshots
+  → ResearchAgent reads this on next run to close the feedback loop
 ```
 
-### Key files
+### Critical architectural decisions
 
-| File | Purpose |
-|---|---|
-| `agents/_llm.py` | Shared Gemini 2.5 Flash client — used by all AI agents |
-| `agents/_db.py` | Supabase wrapper — used by all agents and dashboard |
-| `agents/research_agent.py` | RSS/Reddit → Gemini ideas → Supabase |
-| `agents/content_agent.py` | Approved idea → full carousel/reel JSON |
-| `agents/design_agent.py` | Carousel JSON → PNG slides (Pillow, no API) |
-| `agents/publishing_agent.py` | imgbb upload + Meta Graph API publish |
-| `agents/analytics_agent.py` | Meta metrics → Gemini weekly analysis |
-| `agents/hashtag_agent.py` | Topic → 3 rotating hashtag sets |
-| `dashboard.py` | Streamlit approval UI, wraps `_db.py` |
-| `config.yaml` | Non-secret config: niche, brand colors, RSS URLs |
-| `.env` | All secrets (never committed) |
-| `.github/workflows/` | Four cron jobs: research, generate, publish, analytics |
+**Instagram API:** Uses the **Instagram API with Instagram Login** (`graph.instagram.com/v21.0`), NOT the Facebook Graph API. Token prefix is `IGAA` (stored as `META_ACCESS_TOKEN` for historical naming). Never use `graph.facebook.com`, `me/accounts`, Page tokens, or `fb_exchange_token` — those fail with page-permission errors.
+
+**Token refresh:** Single GET to `graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=...` — no app id/secret needed. `scripts/refresh_token.py` + `refresh_token.yml` handle this monthly. Requires a `GH_PAT` secret (repo `secrets: write`) because `GITHUB_TOKEN` can't update secrets.
+
+**Auto-approve:** `ResearchAgent.save_ideas_to_db()` sorts the 5 Gemini ideas by `estimated_engagement` and saves the top 3 as `approved` directly. `generate.yml` picks these up without any human step. The dashboard Approval Center remains for manual override (reject before posting, or approve the remaining 2).
+
+**PublishingAgent lazy init:** `META_ACCESS_TOKEN` and `INSTAGRAM_USER_ID` are read with `os.environ.get()` (not `os.environ[]`) so `generate.yml` can construct `PublishingAgent` just for `upload_image_to_hosting()` without carrying Meta creds. `_require_meta()` guards the actual publish methods.
+
+**Image paths:** After `generate.yml`, `image_paths` in Supabase holds **imgbb URLs** (strings starting with `http`), not local file paths. `upload_image_to_hosting()` passes URLs through unchanged, so double-uploading is safe. Dashboard renders URLs and local paths (checks `startswith("http")` first).
 
 ### Database (Supabase Postgres)
 
-Three tables — see `docs/database.md` for full schema.
+Access only via `agents/_db.py` — never import `supabase` client directly.
 
-- **`content_ideas`** — full lifecycle: `pending_review → approved → designed → published`
-- **`analytics_snapshots`** — weekly metrics + AI analysis text
-- **`config`** — reserved key-value store
-
-Access only via `agents/_db.py` functions (`get_ideas`, `update_idea`, etc.) — never import the Supabase client directly in agents or dashboard.
+- `content_ideas`: `pending_review → approved → designed → published`
+- `analytics_snapshots`: weekly AI analysis; read by `ResearchAgent` to inform next idea generation
+- `config`: reserved, unused
 
 ### Environment variables
 
-All loaded via `python-dotenv` (`load_dotenv()` at top of each agent). Required:
-
 ```
 GEMINI_API_KEY          # Google AI Studio
-META_ACCESS_TOKEN       # Facebook Page Access Token (60-day, refresh monthly)
-INSTAGRAM_USER_ID       # IG Business Account ID (numeric, e.g. 17841449119738027)
-META_APP_ID / META_APP_SECRET  # For token refresh
-IMGBB_API_KEY           # Image hosting
-SUPABASE_URL / SUPABASE_KEY    # Database
+META_ACCESS_TOKEN       # IGAA-prefixed token (Instagram Login API)
+INSTAGRAM_USER_ID       # IG Business Account ID (numeric)
+IMGBB_API_KEY           # Image hosting (public URL required by Meta)
+SUPABASE_URL            # Supabase project URL
+SUPABASE_KEY            # Supabase service_role key (not anon)
+GH_PAT                  # GitHub PAT with secrets:write — only for refresh_token.yml
+META_APP_ID / META_APP_SECRET  # Legacy; not used by current publish/refresh flow
 ```
 
-### Free stack
+### config.yaml
 
-- **LLM:** Gemini 2.5 Flash (`google-genai` SDK) — replaces Azure OpenAI
-- **Images:** Pillow locally + imgbb hosting — zero cost
-- **Scheduler:** GitHub Actions cron — no always-on server
-- **DB:** Supabase Postgres free tier (500 MB)
-- **Dashboard:** Streamlit Community Cloud (not Vercel — this is a Python/Streamlit app)
+Non-secret runtime config: niche, brand voice, brand colors, RSS feeds, subreddits, fonts, output dir. Secrets are never put here. The dashboard Settings page writes back to this file.
 
-## Docs
+### Fonts
 
-| File | Contents |
-|---|---|
-| `docs/architecture.md` | System diagram, lifecycle, free stack table |
-| `docs/agents.md` | Each agent's interface and output schema |
-| `docs/database.md` | Supabase schema + `_db.py` API reference |
-| `docs/setup.md` | Step-by-step credential and deployment guide |
-| `PLAN.md` | Original implementation plan with feasibility analysis |
+`fonts/Inter-Bold.ttf` and `fonts/Inter-Regular.ttf` (bundled). `DesignAgent` falls back to `ImageFont.load_default(size=N)` (Pillow ≥10.1) if missing — renders DejaVuSans at the correct size, not a microscopic bitmap.
