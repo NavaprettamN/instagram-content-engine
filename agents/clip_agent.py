@@ -57,7 +57,9 @@ class ClipAgent:
                "--no-playlist"]
         cookies = os.environ.get("YT_COOKIES_FILE")
         if cookies and os.path.exists(cookies):
-            cmd += ["--cookies", cookies]
+            # web client needs to solve YouTube's "n" JS challenge; fetch the EJS
+            # solver script and run it via deno (installed in CI).
+            cmd += ["--cookies", cookies, "--remote-components", "ejs:github"]
         else:
             cmd += ["--extractor-args", "youtube:player_client=android"]
         cmd += ["-o", out, url]
