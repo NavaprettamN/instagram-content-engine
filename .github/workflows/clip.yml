@@ -1,0 +1,36 @@
+name: Clip Agent — CC YouTube → Reel (weekly)
+
+# Heaviest workflow: downloads a Creative-Commons video, transcribes with Whisper
+# (CPU), and reframes/captions a segment with ffmpeg. Runs weekly to respect
+# Actions minutes + Whisper CPU cost. apt ffmpeg ensures libass (caption burn-in).
+
+on:
+  schedule:
+    - cron: "0 16 * * 0"   # Sunday 16:00 UTC
+  workflow_dispatch:
+
+jobs:
+  clip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install ffmpeg (with libass for caption burn-in)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - run: pip install -r requirements.txt
+
+      - name: Clip a CC video and publish as a reel
+        env:
+          GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
+          YOUTUBE_API_KEY:   ${{ secrets.YOUTUBE_API_KEY }}
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+          SUPABASE_URL:      ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:      ${{ secrets.SUPABASE_KEY }}
+        run: python -m scripts.clip_publish

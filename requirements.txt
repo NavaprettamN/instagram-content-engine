@@ -9,3 +9,5 @@ Pillow
 google-genai
 supabase
 pytrends
+yt-dlp
+faster-whisper

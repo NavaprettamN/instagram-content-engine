@@ -48,6 +48,12 @@ publish.yml (08:00 / 14:00 / 20:00 UTC)
 analytics.yml (Sunday 20:00 UTC)
   Meta media insights → Gemini weekly analysis → Supabase: analytics_snapshots
   → ResearchAgent reads this on next run to close the feedback loop
+
+clip.yml (Sunday 16:00 UTC, weekly — heaviest job)
+  YouTube CC search (videoLicense=creativeCommon) → yt-dlp download
+  → faster-whisper transcript → Gemini picks a 20-40s segment
+  → ffmpeg cut + 9:16 reframe + burned captions → publish_reel
+  CC-BY attribution appended to caption. apt-installs ffmpeg for libass.
 ```
 
 ### Critical architectural decisions
