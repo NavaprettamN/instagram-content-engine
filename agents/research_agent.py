@@ -75,7 +75,7 @@ Here is today's research from trending articles and Reddit:
 Based on this research AND your own knowledge, generate exactly 5 Instagram content ideas.
 For each idea provide:
 1. content_type: "carousel" or "reel" or "static_image"
-2. hook: The first line/headline (max 10 words, must stop scrollers)
+2. hook: The first line/headline (max 8 words). Use a curiosity gap, a bold claim, or a number — it must stop the scroll and make people NEED the rest.
 3. outline: 3-5 bullet points of what the content covers
 4. caption_draft: A full Instagram caption (150-200 words)
 5. estimated_engagement: "high" / "medium" / "low" with reasoning

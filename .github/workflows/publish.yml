@@ -32,7 +32,8 @@ jobs:
           import json, yaml
           from datetime import datetime, timezone
           from agents.publishing_agent import PublishingAgent
-          from agents._db import get_ideas, update_idea
+          from agents.hashtag_agent import compose_caption
+          from agents._db import get_ideas, update_idea, count_ideas
 
           config = yaml.safe_load(open('config.yaml'))
           designed = get_ideas(status='designed')
@@ -43,12 +44,13 @@ jobs:
           post = designed[-1]  # oldest first (list is newest-first, take last)
           agent = PublishingAgent(config)
           paths = json.loads(post['image_paths']) if post.get('image_paths') else []
+          caption = compose_caption(post, count_ideas('published'))  # rotated hashtag set appended
 
           print(f'Publishing: {post[\"hook\"]}')
           if post['content_type'] == 'carousel' and len(paths) > 1:
-              result = agent.publish_carousel(paths, post['caption_draft'])
+              result = agent.publish_carousel(paths, caption)
           elif paths:
-              result = agent.publish_single_image(paths[0], post['caption_draft'])
+              result = agent.publish_single_image(paths[0], caption)
           else:
               print('ERROR: no image paths found')
               exit(1)

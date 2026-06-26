@@ -241,10 +241,12 @@ elif page == "🚀 Run Agents":
                             f"Go to Approval Center and click Generate to create slides."
                         )
                     else:
+                        from agents.hashtag_agent import compose_caption
+                        caption = compose_caption(post, count_ideas("published"))
                         if len(paths) > 1:
-                            result = agent.publish_carousel(paths, post["caption_draft"])
+                            result = agent.publish_carousel(paths, caption)
                         else:
-                            result = agent.publish_single_image(paths[0], post["caption_draft"])
+                            result = agent.publish_single_image(paths[0], caption)
 
                         if "error" in result:
                             st.error(f"Instagram API error: {result['error'].get('message', result)}")

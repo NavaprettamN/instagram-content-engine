@@ -48,9 +48,11 @@ jobs:
               # Generate images and immediately upload to imgbb
               local_paths = da.generate_carousel_images(content, idea['id'])
               hosted_urls = [pa.upload_image_to_hosting(p) for p in local_paths]
+              hashtag_sets = ha.generate_hashtag_sets(idea['hook'])  # 3 rotating sets
               update_idea(idea['id'],
                           generated_content=json.dumps(content),
                           image_paths=json.dumps(hosted_urls),
+                          hashtags=json.dumps(hashtag_sets),
                           status='designed')
               print(f'  -> designed, {len(hosted_urls)} images hosted')
           "

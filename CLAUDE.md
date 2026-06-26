@@ -61,6 +61,8 @@ analytics.yml (Sunday 20:00 UTC)
 
 **Image paths:** After `generate.yml`, `image_paths` in Supabase holds **imgbb URLs** (strings starting with `http`), not local file paths. `upload_image_to_hosting()` passes URLs through unchanged, so double-uploading is safe. Dashboard renders URLs and local paths (checks `startswith("http")` first).
 
+**Hashtags:** `generate.yml` calls `HashtagAgent.generate_hashtag_sets()` and stores 3 volume-mixed sets in the `hashtags` column. At publish time, every site composes the caption via `hashtag_agent.compose_caption(post, count_ideas('published'))`, which appends one **rotated** set (rotation = published count) so Instagram never sees a repeated hashtag block. `pick_hashtags()` handles both the 3-set shape and the legacy flat list. Never append hashtags inline at a publish site — route through `compose_caption`.
+
 ### Database (Supabase Postgres)
 
 Access only via `agents/_db.py` — never import `supabase` client directly.
@@ -85,6 +87,10 @@ META_APP_ID / META_APP_SECRET  # Legacy; not used by current publish/refresh flo
 ### config.yaml
 
 Non-secret runtime config: niche, brand voice, brand colors, RSS feeds, subreddits, fonts, output dir. Secrets are never put here. The dashboard Settings page writes back to this file.
+
+### Manual reach levers (not automatable)
+
+The engine handles content + cadence, but these move follower growth and must be done by hand: an optimized bio + link-in-bio, and replying to comments within the first hour of a post (early engagement drives reach). Posting slots in `config.yaml` are UTC; tune them to `audience_timezone`'s active hours, and use `AnalyticsAgent`'s weekly report once it has data.
 
 ### Fonts
 

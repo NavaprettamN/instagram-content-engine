@@ -28,7 +28,7 @@ Generate exactly this JSON structure:
     }}
   ],
   "slide_final_cta": "Call to action text for last slide",
-  "caption": "Full Instagram caption, 150-200 words. First line = hook. Include line breaks. End with a question.",
+  "caption": "Full Instagram caption, 150-200 words. Structure: (1) first line = a scroll-stopping hook, (2) the value/body with line breaks, (3) a save/share CTA like 'Save this for later 📌' or 'Send this to someone who needs it', (4) a follow CTA, (5) end with a question that invites comments.",
   "alt_text": "Accessibility description of the carousel content"
 }}
 
@@ -38,6 +38,7 @@ Rules:
 - Use numbers and data where possible
 - Write at 8th grade reading level
 - No clichés like "game-changer" or "in today's world"
+- Optimize for SAVES and SHARES (the strongest reach signals): make the content reference-worthy and worth sending to a friend
 """
         return generate_text(
             prompt,

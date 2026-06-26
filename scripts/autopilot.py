@@ -13,7 +13,8 @@ from agents.research_agent import ResearchAgent
 from agents.content_agent import ContentAgent
 from agents.design_agent import DesignAgent
 from agents.publishing_agent import PublishingAgent
-from agents._db import get_ideas, update_idea
+from agents.hashtag_agent import HashtagAgent, compose_caption
+from agents._db import get_ideas, update_idea, count_ideas
 
 
 def main():
@@ -33,12 +34,16 @@ def main():
     local_paths = DesignAgent(config).generate_carousel_images(content, idea["id"])
     pa = PublishingAgent(config)
     hosted = [pa.upload_image_to_hosting(p) for p in local_paths]
+    hashtag_sets = HashtagAgent(config).generate_hashtag_sets(idea["hook"])
     update_idea(idea["id"], generated_content=json.dumps(content),
-                image_paths=json.dumps(hosted), status="designed")
+                image_paths=json.dumps(hosted),
+                hashtags=json.dumps(hashtag_sets), status="designed")
+    idea["hashtags"] = hashtag_sets  # so compose_caption sees the fresh sets
+    caption = compose_caption(idea, count_ideas("published"))
 
     print(f"== Publish ({len(hosted)} slides) ==")
-    result = (pa.publish_carousel(hosted, idea["caption_draft"]) if len(hosted) > 1
-              else pa.publish_single_image(hosted[0], idea["caption_draft"]))
+    result = (pa.publish_carousel(hosted, caption) if len(hosted) > 1
+              else pa.publish_single_image(hosted[0], caption))
     if "error" in result:
         raise RuntimeError(f"Publish failed: {result['error']}")
     update_idea(idea["id"], status="published",
