@@ -42,6 +42,13 @@ font_regular: "./fonts/Inter-Regular.ttf"
 
 output_dir: "./generated_content"
 
+# ── Reels ─────────────────────────────────────────────────────────
+# A "reel" here = the same carousel slides rendered as a vertical slideshow
+# video (ffmpeg, $0). reel_ratio = fraction of posts published as reels vs
+# carousels. Reels get more reach but the API can't attach IG trending audio.
+reel_ratio: 0.4
+reel_seconds_per_slide: 2.5
+
 # ── Publishing Schedule ───────────────────────────────────────────
 # publish.yml cron is in UTC. Pick UTC slots that land in your audience's
 # active hours (this timezone). Once analytics has data, AnalyticsAgent

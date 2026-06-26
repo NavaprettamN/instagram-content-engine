@@ -29,6 +29,13 @@ class PublishingAgent:
         resp.raise_for_status()
         return resp.json()["data"]["url"]
 
+    def upload_video_to_hosting(self, video_path):
+        """Public URL for a reel MP4 — uploads local files to Supabase Storage, passes URLs through."""
+        if str(video_path).startswith("http"):
+            return video_path
+        from agents._db import upload_video
+        return upload_video(video_path)
+
     def _require_meta(self):
         if not self.access_token or not self.ig_user_id:
             raise RuntimeError("META_ACCESS_TOKEN and INSTAGRAM_USER_ID must be set to publish.")

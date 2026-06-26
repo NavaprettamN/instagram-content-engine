@@ -31,6 +31,7 @@ jobs:
           from agents.design_agent import DesignAgent
           from agents.hashtag_agent import HashtagAgent
           from agents.publishing_agent import PublishingAgent
+          from agents.video_agent import VideoAgent
           from agents._db import get_ideas, update_idea
 
           config = yaml.safe_load(open('config.yaml'))
@@ -38,21 +39,32 @@ jobs:
           da = DesignAgent(config)
           ha = HashtagAgent(config)
           pa = PublishingAgent(config)
+          va = VideoAgent(config)
+          reel_cut = round(config.get('reel_ratio', 0.4) * 5)  # ids with id%5 < cut -> reel
 
           approved = get_ideas(status='approved')
           for idea in approved:
               if idea.get('generated_content'):
                   continue  # already processed
               print(f'Processing idea {idea[\"id\"]}: {idea[\"hook\"]}')
-              content = ca.generate_content(idea)
-              # Generate images and immediately upload to imgbb
+              content = ca.generate_carousel(idea)  # always carousel slides (reel = slideshow of these)
               local_paths = da.generate_carousel_images(content, idea['id'])
-              hosted_urls = [pa.upload_image_to_hosting(p) for p in local_paths]
               hashtag_sets = ha.generate_hashtag_sets(idea['hook'])  # 3 rotating sets
+
+              as_reel = (idea['id'] % 5) < reel_cut
+              if as_reel:
+                  reel = va.slides_to_reel(local_paths,
+                                           out_path=f'{config[\"output_dir\"]}/carousel_{idea[\"id\"]}/reel.mp4')
+                  media = [pa.upload_video_to_hosting(reel)]
+                  fmt = 'reel'
+              else:
+                  media = [pa.upload_image_to_hosting(p) for p in local_paths]
+                  fmt = 'carousel'
               update_idea(idea['id'],
                           generated_content=json.dumps(content),
-                          image_paths=json.dumps(hosted_urls),
+                          image_paths=json.dumps(media),
                           hashtags=json.dumps(hashtag_sets),
+                          content_type=fmt,
                           status='designed')
-              print(f'  -> designed, {len(hosted_urls)} images hosted')
+              print(f'  -> designed as {fmt}, {len(media)} media hosted')
           "

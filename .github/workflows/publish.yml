@@ -46,8 +46,10 @@ jobs:
           paths = json.loads(post['image_paths']) if post.get('image_paths') else []
           caption = compose_caption(post, count_ideas('published'))  # rotated hashtag set appended
 
-          print(f'Publishing: {post[\"hook\"]}')
-          if post['content_type'] == 'carousel' and len(paths) > 1:
+          print(f'Publishing ({post[\"content_type\"]}): {post[\"hook\"]}')
+          if post['content_type'] == 'reel' and paths:
+              result = agent.publish_reel(paths[0], caption)  # paths[0] = hosted MP4 URL
+          elif post['content_type'] == 'carousel' and len(paths) > 1:
               result = agent.publish_carousel(paths, caption)
           elif paths:
               result = agent.publish_single_image(paths[0], caption)

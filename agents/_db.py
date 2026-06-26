@@ -1,4 +1,5 @@
 import os
+import time
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
@@ -45,3 +46,20 @@ def get_analytics(limit=10):
 
 def save_analytics(snapshot_dict):
     _get_client().table("analytics_snapshots").insert(snapshot_dict).execute()
+
+# ── storage (video hosting for reels) ──────────────────────────────
+
+def upload_video(local_path, bucket="reels"):
+    """Upload an MP4 to a public Supabase Storage bucket; return its public URL.
+    imgbb is images-only, so reels need this. Bucket is created public on first use."""
+    client = _get_client()
+    try:
+        client.storage.create_bucket(bucket, options={"public": True})
+    except Exception:
+        pass  # already exists
+    dest = f"{int(time.time())}_{os.path.basename(local_path)}"
+    with open(local_path, "rb") as f:
+        client.storage.from_(bucket).upload(
+            dest, f.read(), {"content-type": "video/mp4", "upsert": "true"}
+        )
+    return client.storage.from_(bucket).get_public_url(dest)
