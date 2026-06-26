@@ -48,16 +48,18 @@ class ClipAgent:
     def download(self, url, out_base):
         out = f"{out_base}.mp4"
         # `python -m yt_dlp` (not the console script) so it works regardless of PATH.
-        # android player_client downloads without a JS runtime or PO token.
-        # YouTube bot-blocks datacenter IPs (e.g. CI); set YT_COOKIES_FILE to a
-        # Netscape cookies.txt from a logged-in session to get past it there.
+        # Two mutually-exclusive paths: the android client downloads without a JS
+        # runtime or PO token but does NOT support cookies; cookies (needed to get
+        # past YouTube's datacenter-IP bot block in CI) require the default
+        # cookie-supporting clients. So: cookies -> default clients; else android.
         cmd = [sys.executable, "-m", "yt_dlp",
-               "--extractor-args", "youtube:player_client=android",
                "-f", "best[ext=mp4][height<=720]/best[height<=720]/best",
                "--no-playlist"]
         cookies = os.environ.get("YT_COOKIES_FILE")
         if cookies and os.path.exists(cookies):
             cmd += ["--cookies", cookies]
+        else:
+            cmd += ["--extractor-args", "youtube:player_client=android"]
         cmd += ["-o", out, url]
         try:
             subprocess.run(cmd, check=True, capture_output=True, text=True)
