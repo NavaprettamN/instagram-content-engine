@@ -15,45 +15,53 @@ import requests
 from agents._llm import generate_text
 
 BASE = "https://api.jamendo.com/v3.0/tracks/"
+# Jamendo ANDs multiple tags, so we query ONE mood tag at a time. These are all
+# real, well-populated Jamendo mood tags — keeps the LLM from inventing misses.
+MOODS = ["upbeat", "energetic", "happy", "inspiring", "motivational",
+         "corporate", "calm", "relaxing", "epic", "uplifting", "chill"]
 
 
 class MusicAgent:
     def __init__(self, config):
         self.client_id = os.environ.get("JAMENDO_CLIENT_ID")
-        self.default_tags = config.get("reel_music_tags", "upbeat,corporate")
+        self.default_tag = config.get("reel_music_tags", "upbeat").split(",")[0].strip()
 
-    def _mood_tags(self, hook):
-        """One cheap LLM call -> 2 Jamendo mood tags; fall back to config default."""
+    def _mood_tag(self, hook):
+        """One cheap LLM call -> a single mood tag from MOODS; fall back to default."""
         try:
             raw = generate_text(
-                f'Pick exactly 2 instrumental-music mood tags (comma-separated, '
-                f'lowercase single words such as upbeat, calm, inspiring, corporate, '
-                f'energetic) that fit an Instagram reel titled: "{hook}". '
-                f'Return ONLY the two tags.',
+                f'Pick the ONE best-fitting instrumental-music mood for an Instagram '
+                f'reel titled: "{hook}". Choose from exactly this list: {", ".join(MOODS)}. '
+                f'Return only the single word.',
                 temperature=0.3,
-            )
-            tags = ",".join(t.strip().lower() for t in raw.replace("\n", " ").split(",")[:2] if t.strip())
-            return tags or self.default_tags
+            ).strip().lower()
+            return raw if raw in MOODS else self.default_tag
         except Exception:
-            return self.default_tags
+            return self.default_tag
+
+    def _query(self, tags):
+        """Return the top downloadable instrumental for a tag, or None."""
+        params = {"client_id": self.client_id, "format": "json", "limit": 1,
+                  "audioformat": "mp32", "vocalinstrumental": "instrumental",
+                  "order": "popularity_total", "audiodownload_allowed": "true"}
+        if tags:
+            params["tags"] = tags
+        r = requests.get(BASE, params=params, timeout=20)
+        r.raise_for_status()
+        results = r.json().get("results", [])
+        return results[0] if results else None
 
     def pick_track(self, hook, out_path):
         """Download a mood-matching CC instrumental. Returns {'path','credit'} or None."""
         if not self.client_id:
             return None
         try:
-            r = requests.get(BASE, params={
-                "client_id": self.client_id, "format": "json", "limit": 1,
-                "tags": self._mood_tags(hook), "audioformat": "mp32",
-                "vocalinstrumental": "instrumental", "order": "popularity_total",
-                "audiodownload_allowed": "true",
-            }, timeout=20)
-            r.raise_for_status()
-            results = r.json().get("results", [])
-            if not results:
-                return None
-            t = results[0]
-            audio_url = t.get("audiodownload") or t.get("audio")
+            # progressively relax: LLM mood -> default mood -> any instrumental
+            for tags in (self._mood_tag(hook), self.default_tag, ""):
+                t = self._query(tags)
+                if t:
+                    break
+            audio_url = t.get("audiodownload") or t.get("audio") if t else None
             if not audio_url:
                 return None
             data = requests.get(audio_url, timeout=60).content
