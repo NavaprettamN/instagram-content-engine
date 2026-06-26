@@ -12,7 +12,9 @@ class PublishingAgent:
         # and shouldn't fail (or carry the 60-day Meta token) just to host images on imgbb.
         self.access_token = os.environ.get("META_ACCESS_TOKEN")
         self.ig_user_id = os.environ.get("INSTAGRAM_USER_ID")
-        self.imgbb_api_key = os.environ["IMGBB_API_KEY"]
+        # lazy like the Meta creds — the clip/reel path hosts video on Supabase
+        # and never touches imgbb, so don't hard-require it just to construct.
+        self.imgbb_api_key = os.environ.get("IMGBB_API_KEY")
         # Instagram API with Instagram Login (IGAA token) — no Facebook Page needed.
         self.base_url = "https://graph.instagram.com/v21.0"
 
@@ -20,6 +22,8 @@ class PublishingAgent:
         """Return a public URL for the image — uploads local files to imgbb, passes URLs through."""
         if str(image_path).startswith("http"):
             return image_path  # already hosted (e.g. from a previous Actions run)
+        if not self.imgbb_api_key:
+            raise RuntimeError("IMGBB_API_KEY must be set to host images.")
         with open(image_path, "rb") as f:
             resp = requests.post(
                 "https://api.imgbb.com/1/upload",
