@@ -10,7 +10,7 @@ load_dotenv()
 
 from agents._db import (
     get_ideas, get_idea, count_ideas, save_idea, update_idea,
-    get_analytics, save_analytics,
+    get_analytics, save_analytics, get_config,
 )
 
 st.set_page_config(page_title="Instagram Content Engine", page_icon="📸", layout="wide")
@@ -158,24 +158,67 @@ elif page == "✅ Approval Center":
 
 # ==================== ANALYTICS ====================
 elif page == "📊 Analytics":
-    st.title("Performance Analytics")
+    st.title("📊 Performance Analytics")
+    import pandas as pd
 
-    published = get_ideas(status="published")
-    st.metric("Total Published", len(published))
+    @st.cache_data(ttl=600)
+    def load_perf():
+        from agents.analytics_agent import AnalyticsAgent
+        a = AnalyticsAgent(load_config())
+        return a.account_summary(), a.post_performance(limit=30)
 
-    if published:
-        import pandas as pd
-        from collections import Counter
-        type_counts = Counter(i["content_type"] for i in published)
-        df = pd.DataFrame(type_counts.items(), columns=["Type", "Count"])
-        st.bar_chart(df.set_index("Type"))
+    if st.button("🔄 Refresh metrics"):
+        st.cache_data.clear()
+    try:
+        summary, perf = load_perf()
+    except Exception as e:
+        st.error(f"Couldn't load Instagram metrics: {e}")
+        summary, perf = {}, []
 
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("👥 Followers", summary.get("followers_count", "–"))
+    c2.metric("📦 Posts", summary.get("media_count", len(perf)))
+    c3.metric("👁 Total Reach", sum(p["reach"] for p in perf))
+    avg_eng = round(sum(p["eng_rate"] for p in perf) / len(perf), 1) if perf else 0
+    c4.metric("💞 Avg Eng. Rate", f"{avg_eng}%")
+
+    # Follower growth trend (from weekly analytics snapshots)
+    hist = json.loads(get_config("follower_history") or "[]")
+    if len(hist) > 1:
+        st.subheader("Follower Growth")
+        st.line_chart(pd.DataFrame(hist).set_index("date")["count"])
+
+    if perf:
+        best = max(perf, key=lambda p: p["score"])
+        worst = min(perf, key=lambda p: p["score"])
+        col_b, col_w = st.columns(2)
+        col_b.success(f"🏆 **Best post** (score {best['score']})\n\n{best['caption']}\n\n"
+                      f"{best['saved']} saves · {best['shares']} shares · {best['reach']} reach")
+        col_w.warning(f"📉 **Weakest post** (score {worst['score']})\n\n{worst['caption']}\n\n"
+                      f"reach {worst['reach']} · {worst['eng_rate']}% eng.")
+
+        st.subheader("Per-Post Performance")
+        st.caption("Score weights reach signals: saves & shares ×3, comments ×2, likes ×1.")
+        df = pd.DataFrame(perf)[["caption", "type", "reach", "likes", "comments",
+                                 "saved", "shares", "eng_rate", "score"]]
+        df = df.sort_values("score", ascending=False).reset_index(drop=True)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+    else:
+        st.info("No post metrics yet — publish a few posts and check back.")
+
+    st.divider()
     snaps = get_analytics(limit=1)
     if snaps:
-        snap = snaps[0]
-        st.subheader("Latest AI Analysis")
-        st.write(f"*Generated: {snap['date']}*")
-        st.markdown(snap["analysis"])
+        st.subheader("🤖 Latest AI Analysis")
+        st.caption(f"Generated: {snaps[0]['date']}")
+        st.markdown(snaps[0]["analysis"])
+    if st.button("Run AI analysis now"):
+        with st.spinner("Analyzing (pulls metrics + Gemini)..."):
+            from agents.analytics_agent import AnalyticsAgent
+            AnalyticsAgent(load_config()).run()
+            st.cache_data.clear()
+            st.success("Analysis updated!")
+            st.rerun()
 
 # ==================== RUN AGENTS ====================
 elif page == "🚀 Run Agents":

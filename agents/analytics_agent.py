@@ -6,7 +6,11 @@ from datetime import datetime
 from dotenv import load_dotenv
 from collections import defaultdict
 from agents._llm import generate_text
-from agents._db import save_analytics, set_config
+from agents._db import save_analytics, set_config, get_config
+
+# Valid media-insight metrics on graph.instagram.com (Instagram-Login API).
+# The old Graph API names (impressions, engagement) are rejected here.
+POST_METRICS = "reach,likes,comments,saved,shares,total_interactions"
 
 load_dotenv()
 
@@ -19,27 +23,47 @@ class AnalyticsAgent:
         # from the old Graph API — adjust get_*_insights if those calls error.
         self.base_url = "https://graph.instagram.com/v21.0"
 
-    def get_account_insights(self, period="day", days=7):
-        metrics = "impressions,reach,follower_count,profile_views"
-        resp = requests.get(
-            f"{self.base_url}/{self.ig_user_id}/insights",
-            params={
-                "metric": metrics,
-                "period": period,
-                "since": int(time.time()) - (days * 86400),
-                "until": int(time.time()),
-                "access_token": self.access_token,
-            },
+    def account_summary(self):
+        """Followers + media count (the reliable account-level fields)."""
+        r = requests.get(
+            f"{self.base_url}/{self.ig_user_id}",
+            params={"fields": "followers_count,media_count", "access_token": self.access_token},
+            timeout=15,
         )
-        return resp.json()
+        return r.json()
 
     def get_post_insights(self, media_id):
-        metrics = "impressions,reach,engagement,saved,shares"
-        resp = requests.get(
+        """{metric: value} for one post, or {} on error."""
+        r = requests.get(
             f"{self.base_url}/{media_id}/insights",
-            params={"metric": metrics, "access_token": self.access_token},
+            params={"metric": POST_METRICS, "access_token": self.access_token}, timeout=15,
         )
-        return resp.json()
+        data = r.json().get("data", [])
+        return {d["name"]: (d.get("values", [{}])[0].get("value") or 0) for d in data}
+
+    def post_performance(self, limit=30):
+        """Per published post: metadata + insights + engagement rate + a reach-
+        weighted score (saves/shares/comments matter most). Newest first."""
+        posts = self.get_recent_posts(limit=limit)
+        data = posts.get("data", []) if isinstance(posts, dict) else (posts or [])
+        out = []
+        for p in data:
+            ins = self.get_post_insights(p["id"])
+            reach = ins.get("reach", 0) or 0
+            inter = ins.get("total_interactions", 0) or 0
+            saved, shares = ins.get("saved", 0), ins.get("shares", 0)
+            comments, likes = ins.get("comments", 0), ins.get("likes", 0)
+            out.append({
+                "id": p["id"], "permalink": p.get("permalink"),
+                "caption": (p.get("caption") or "").split("\n")[0][:70],
+                "type": p.get("media_type", ""), "timestamp": p.get("timestamp", ""),
+                "reach": reach, "likes": likes, "comments": comments,
+                "saved": saved, "shares": shares, "interactions": inter,
+                "eng_rate": round(100 * inter / reach, 1) if reach else 0.0,
+                # reach signals weighted: saves & shares > comments > likes
+                "score": saved * 3 + shares * 3 + comments * 2 + likes,
+            })
+        return out
 
     def get_recent_posts(self, limit=25):
         resp = requests.get(
@@ -106,16 +130,22 @@ Be specific. Use numbers. No vague advice."""
 
     def run(self):
         print("Analytics Agent: Pulling metrics...")
-        insights = self.get_account_insights()
-        posts = self.get_recent_posts()
+        summary = self.account_summary()
+        perf = self.post_performance()
+        today = datetime.utcnow().date().isoformat()
 
         print("Analytics Agent: Generating analysis...")
-        analysis = self.generate_weekly_analysis(insights, posts)
+        analysis = self.generate_weekly_analysis(summary, perf)
+        save_analytics({"date": today, "analysis": analysis})
 
-        save_analytics({
-            "date": datetime.utcnow().date().isoformat(),
-            "analysis": analysis,
-        })
+        # Follower-growth trend (config history — no schema change).
+        fc = summary.get("followers_count")
+        if fc is not None:
+            hist = json.loads(get_config("follower_history") or "[]")
+            if not hist or hist[-1].get("date") != today:
+                hist.append({"date": today, "count": fc})
+                set_config("follower_history", json.dumps(hist[-90:]))
+            print(f"Analytics Agent: followers = {fc}")
 
         # Best-time optimizer: store top hours for publish.yml's adaptive gate.
         hours = self.best_posting_hours()
