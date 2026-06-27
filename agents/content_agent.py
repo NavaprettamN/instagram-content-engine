@@ -64,6 +64,35 @@ Rules:
                 result["caption"] = result["caption"].replace(ph, self.handle)
         return result
 
+    def generate_voice_script(self, idea):
+        """Original voiceover reel: {hook (top title), script (narration), caption}."""
+        affiliate = ""
+        if self.affiliate_tools:
+            affiliate = (f"\nIf one of these tools we recommend is genuinely relevant, name it "
+                         f"naturally in the script and add 'link in bio' to the caption (never force "
+                         f"it): {', '.join(self.affiliate_tools)}\n")
+        result = generate_text(
+            f"""Create a 35-45 second Instagram REEL about {self.niche}.
+
+IDEA: {idea['hook']}
+OUTLINE: {json.dumps(idea['outline']) if isinstance(idea['outline'], list) else idea['outline']}
+BRAND VOICE: {self.brand_voice}
+{affiliate}
+Return JSON:
+{{
+  "hook": "3-6 word on-screen title — punchy, scroll-stopping",
+  "script": "The spoken narration as ONE flowing voiceover, 110-130 words. First 3 seconds MUST be a pattern-interrupt hook. Specific, valuable, energetic, short sentences. End with a verbal 'follow for more' CTA. NO emojis, NO hashtags, NO stage directions, NO markdown — only the words to be spoken aloud.",
+  "caption": "Instagram caption: hook line, brief value, a save/share CTA, a question, and a follow CTA using {self.handle}."
+}}
+Rules: the script must sound natural read aloud; use numbers/specifics over fluff.""",
+            system=f"Expert short-form video scriptwriter for {self.niche}. Return only valid JSON.",
+            json_response=True, temperature=0.7,
+        )
+        if isinstance(result, dict) and result.get("caption") and self.handle:
+            for ph in ("@[YourHandle]", "[YourHandle]", "@YourHandle", "[your handle]"):
+                result["caption"] = result["caption"].replace(ph, self.handle)
+        return result
+
     def generate_reel_script(self, idea):
         prompt = f"""Create a complete Instagram Reel script.
 

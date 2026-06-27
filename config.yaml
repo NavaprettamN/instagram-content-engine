@@ -85,6 +85,7 @@ affiliate:
 # Format mix is 2 reels : 1 carousel (set in generate.yml via id % 3).
 # Reels get more reach; the standout performers are the YouTube CC clips (clip.yml).
 reel_seconds_per_slide: 2.5
+reel_voice: "en-US-AriaNeural"   # free edge-tts neural voice for original reels
 # Fallback Jamendo mood tags if the LLM mood pick fails (needs JAMENDO_CLIENT_ID).
 reel_music_tags: "upbeat,corporate"
 

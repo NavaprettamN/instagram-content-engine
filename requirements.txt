@@ -12,3 +12,4 @@ pytrends
 yt-dlp
 faster-whisper
 fpdf2
+edge-tts
