@@ -42,6 +42,20 @@ font_regular: "./fonts/Inter-Regular.ttf"
 
 output_dir: "./generated_content"
 
+# ── Link-in-bio (GitHub Pages funnel) ─────────────────────────────
+# Put the published Pages URL in your IG bio. "Latest Post" auto-fills with
+# your newest IG permalink on each daily rebuild; fill the other URLs as the
+# affiliate/lead-magnet/product tasks land.
+link_in_bio:
+  title: "AI Productivity Tools"
+  tagline: "Daily AI tips to work smarter, not harder 🤖"
+  profile_url: "https://instagram.com/contentengine2"
+  links:
+    - { emoji: "🆕", label: "My Latest Post",            url: "" }   # auto: newest permalink
+    - { emoji: "🎁", label: "Free: Top 50 AI Tools (PDF)", url: "" } # lead magnet (task #10)
+    - { emoji: "🛠️", label: "AI Tools I Recommend",       url: "" } # affiliate (task #8)
+    - { emoji: "🛒", label: "The AI Productivity Pack",    url: "" } # product (task #9)
+
 # ── Reels ─────────────────────────────────────────────────────────
 # A "reel" here = the same carousel slides rendered as a vertical slideshow
 # video (ffmpeg, $0). reel_ratio = fraction of posts published as reels vs
