@@ -11,9 +11,12 @@ import os
 import html
 import requests
 import yaml
-from dotenv import load_dotenv
 
-load_dotenv()
+try:  # local convenience; in CI the env vars are passed directly
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 OUT_DIR = "_site"
 
