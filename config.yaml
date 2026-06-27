@@ -65,7 +65,7 @@ lead_magnet:
   tagline: "My curated stack to work smarter — free 👇"
   # Paste your Kit/ConvertKit (or any ESP) inline form EMBED here to capture
   # emails on the guide page. Leave "" for an ungated free guide.
-  signup_embed: ""
+  signup_embed: '<script async data-uid="6bf19048b3" src="https://navaprettam-n.kit.com/6bf19048b3/index.js"></script>'
 
 affiliate:
   utm_source: "instagram"
