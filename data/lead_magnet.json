@@ -1,0 +1,20 @@
+[
+  {"name": "ChatGPT", "category": "Writing & Chat", "blurb": "All-purpose AI for drafting, brainstorming, and Q&A."},
+  {"name": "Claude", "category": "Writing & Chat", "blurb": "Long-context reasoning and careful, nuanced writing."},
+  {"name": "Perplexity", "category": "Research", "blurb": "AI search with cited sources — research in seconds."},
+  {"name": "NotebookLM", "category": "Research", "blurb": "Turn your own docs into a queryable knowledge base."},
+  {"name": "Canva Magic Studio", "category": "Design", "blurb": "AI design for carousels, thumbnails, and graphics."},
+  {"name": "Midjourney", "category": "Design", "blurb": "Best-in-class AI image generation for visuals."},
+  {"name": "CapCut", "category": "Video", "blurb": "Auto-captions, edits, and AI effects for reels."},
+  {"name": "Descript", "category": "Video", "blurb": "Edit video by editing text; remove filler words."},
+  {"name": "ElevenLabs", "category": "Audio", "blurb": "Lifelike AI voiceover and dubbing."},
+  {"name": "Cursor", "category": "Coding", "blurb": "AI-native code editor that writes alongside you."},
+  {"name": "GitHub Copilot", "category": "Coding", "blurb": "Inline code completion across editors."},
+  {"name": "Notion AI", "category": "Productivity", "blurb": "Summaries, drafts, and answers inside your notes."},
+  {"name": "Gamma", "category": "Productivity", "blurb": "Generate slick decks and docs from a prompt."},
+  {"name": "Fathom", "category": "Productivity", "blurb": "AI meeting notes and action items, free."},
+  {"name": "Zapier AI", "category": "Automation", "blurb": "Build automations between apps with plain language."},
+  {"name": "Make", "category": "Automation", "blurb": "Visual, low-cost workflow automation at scale."},
+  {"name": "Gemini", "category": "Writing & Chat", "blurb": "Google's AI, strong at multimodal + long context."},
+  {"name": "Suno", "category": "Audio", "blurb": "Generate original music and jingles from text."}
+]

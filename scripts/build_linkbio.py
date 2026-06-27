@@ -9,6 +9,7 @@ links (unfilled placeholders) are skipped.
     python -m scripts.build_linkbio
 """
 import os
+import json
 import html
 import requests
 import yaml
@@ -81,7 +82,15 @@ def _shell(colors, title, tagline, inner_html, footer_html):
 """
 
 
-def render_bio(cfg, has_tools):
+def load_lead_magnet():
+    try:
+        with open("data/lead_magnet.json") as f:
+            return json.load(f)
+    except (FileNotFoundError, ValueError):
+        return []
+
+
+def render_bio(cfg, has_tools, has_guide):
     bio = cfg.get("link_in_bio", {})
     latest = latest_permalink() or bio.get("profile_url", "#")
     buttons = []
@@ -92,10 +101,12 @@ def render_bio(cfg, has_tools):
             url = latest
         elif not url and has_tools and "recommend" in label_l:
             url = "tools.html"  # auto-link the affiliate slot
+        elif not url and has_guide and "free" in label_l:
+            url = "guide.html"  # auto-link the lead-magnet slot
         if not url:
             continue
         label = html.escape(f'{link.get("emoji","")} {link.get("label","")}'.strip())
-        ext = "" if url == "tools.html" else ' target="_blank" rel="noopener"'
+        ext = "" if url in ("tools.html", "guide.html") else ' target="_blank" rel="noopener"'
         buttons.append(f'  <a class="btn" href="{html.escape(url)}"{ext}>{label}</a>')
     profile = html.escape(bio.get("profile_url", "#"))
     footer = f'<a href="{profile}" target="_blank" rel="noopener">@ Follow on Instagram</a>'
@@ -120,18 +131,52 @@ def render_tools(cfg):
                   "The tools I actually use, daily 👇", "\n".join(cards), footer)
 
 
+def render_guide(cfg, tools):
+    lm = cfg.get("lead_magnet", {})
+    cats = {}
+    for t in tools:
+        cats.setdefault(t.get("category", "Other"), []).append(t)
+    blocks = []
+    for cat, items in cats.items():
+        rows = "".join(
+            f'<div class="row"><b>{html.escape(i.get("name",""))}</b>'
+            f'<span>{html.escape(i.get("blurb",""))}</span></div>' for i in items)
+        blocks.append(f'<div class="cat"><h3>{html.escape(cat)}</h3>{rows}</div>')
+    extra = """
+  .cat {{ text-align:left; margin:18px 0; }}
+  .cat h3 {{ color:{accent}; font-size:.95rem; text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }}
+  .row {{ background:{card}; border-radius:12px; padding:13px 15px; margin:8px 0;
+         border:1px solid rgba(255,255,255,.06); }}
+  .row b {{ display:block; }}
+  .row span {{ color:#a0a0a0; font-size:.85rem; }}
+""".format(accent=cfg.get("brand_colors", {}).get("accent", "#e94560"),
+           card=cfg.get("brand_colors", {}).get("secondary_bg", "#16213e"))
+    body = "\n".join("  " + b for b in blocks)
+    footer = ('<a href="tools.html">🛠️ The exact tools I pay for &rarr;</a>'
+              if cfg.get("affiliate", {}).get("tools") else '<a href="index.html">&larr; Back</a>')
+    page = _shell(cfg.get("brand_colors", {}), lm.get("title", "AI Tools Guide"),
+                  lm.get("tagline", ""), body, footer)
+    return page.replace("</style>", extra + "</style>")  # inject guide-only CSS
+
+
 def main():
     cfg = yaml.safe_load(open("config.yaml"))
     os.makedirs(OUT_DIR, exist_ok=True)
     has_tools = bool(cfg.get("affiliate", {}).get("tools"))
+    guide_tools = load_lead_magnet()
+    has_guide = bool(guide_tools)
 
     with open(os.path.join(OUT_DIR, "index.html"), "w") as f:
-        f.write(render_bio(cfg, has_tools))
+        f.write(render_bio(cfg, has_tools, has_guide))
     print(f"build_linkbio: wrote {OUT_DIR}/index.html")
     if has_tools:
         with open(os.path.join(OUT_DIR, "tools.html"), "w") as f:
             f.write(render_tools(cfg))
         print(f"build_linkbio: wrote {OUT_DIR}/tools.html")
+    if has_guide:
+        with open(os.path.join(OUT_DIR, "guide.html"), "w") as f:
+            f.write(render_guide(cfg, guide_tools))
+        print(f"build_linkbio: wrote {OUT_DIR}/guide.html ({len(guide_tools)} tools)")
 
 
 if __name__ == "__main__":

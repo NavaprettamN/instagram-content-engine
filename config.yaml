@@ -52,7 +52,7 @@ link_in_bio:
   profile_url: "https://instagram.com/contentengine2"
   links:
     - { emoji: "🆕", label: "My Latest Post",            url: "" }   # auto: newest permalink
-    - { emoji: "🎁", label: "Free: Top 50 AI Tools (PDF)", url: "" } # lead magnet (task #10)
+    - { emoji: "🎁", label: "Free: The AI Tools Cheat Sheet", url: "" } # lead magnet — auto: guide.html
     - { emoji: "🛠️", label: "AI Tools I Recommend",       url: "" } # affiliate — auto: tools.html
     - { emoji: "🛒", label: "The AI Productivity Pack",    url: "" } # product (task #9)
 
@@ -60,6 +60,10 @@ link_in_bio:
 # Replace the example URLs with YOUR real affiliate links (sign up for each
 # tool's program). These render on the "Tools I Recommend" page (tools.html),
 # linked from the bio. UTM tags are appended for click visibility.
+lead_magnet:
+  title: "The AI Tools Cheat Sheet"
+  tagline: "My curated stack to work smarter — free 👇"
+
 affiliate:
   utm_source: "instagram"
   utm_campaign: "bio_tools"

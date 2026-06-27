@@ -21,7 +21,8 @@ Synced from Notion "Let's Ship" → Tasks database (linked to Instagram Content 
 | 8 | **Affiliate link engine** — config registry → auto-built UTM-tagged "Tools I Recommend" page (tools.html) linked from bio; content nudges "link in bio". (Captions can't hold clickable links; commission $ lives in each network's dashboard.) | 🟣 Urgent | Aug 1–31 | 🔄 In progress |
 | | ↳ **Scaffolding DONE** (tools.html, bio auto-link, UTM, FTC disclosure, content nudge). **Pending:** affiliate-route decision + 1-time signup. Researched (2026): full zero-config is impossible (income needs your identity/payment). Options: Sovrn Commerce auto-convert API (1 key, ~25% cut, shoppable-focused) · CJ/Affiliate.com MCP · direct SaaS programs (best % for AI niche, manual URLs). Amazon PA-API ❌ (gated behind 3→10 sales). | | | |
 | 9 | **Digital product pipeline** — Create "AI Productivity Pack" (templates, prompts). Sell via Gumroad/Lemon Squeezy | 🔴 High | Aug 15–Sep 15 | ❌ |
-| 10 | **Lead magnet + email capture** — Free "Top 50 AI Tools" PDF → email signup → ConvertKit nurture → upsell | 🔴 High | Sep 1–30 | ❌ |
+| 10 | **Lead magnet + email capture** — Free "AI Tools Cheat Sheet" guide page (data/lead_magnet.json → guide.html) linked from bio. Cross-links to affiliate tools.html | 🔴 High | Sep 1–30 | 🔄 In progress |
+| | ↳ **Free guide DONE** (curated guide page + bio auto-link + cross-link to affiliate). **Pending:** email *capture + nurture* needs a 1-time ESP signup (Kit/ConvertKit free tier) — then gate the guide behind a signup form. | | | |
 | 11 | **Media kit generator** — Auto-generated from analytics for brand sponsorships ($200–1K/post) | 🟡 Medium | Oct 1–15 | ❌ |
 | 12 | **Sponsored slot scheduler** — Rate card + calendar for paid posts alongside organic content | 🟡 Medium | Oct 15–31 | ❌ |
 
@@ -59,6 +60,7 @@ Synced from Notion "Let's Ship" → Tasks database (linked to Instagram Content 
 - Story auto-promo bot (reposts latest to Stories daily, once per post)
 - Performance feedback loop (top posts → ResearchAgent makes more of what works)
 - Affiliate engine #8 *scaffolding* (UTM-tagged tools.html + bio auto-link + FTC disclosure + content nudge) — full automation pending signup decision
+- Lead magnet #10 *free guide* (curated AI-tools cheat-sheet page + bio auto-link + affiliate cross-link) — email capture pending ESP signup
 
 **✅ PHASE 1 COMPLETE** — growth engine done. Next: Phase 2 monetization (#8 affiliate is the first revenue stream).
 - OpenCode MCP setup (GitHub + Notion MCP)
