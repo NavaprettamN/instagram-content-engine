@@ -1,9 +1,10 @@
-"""Build the link-in-bio landing page (static HTML) for GitHub Pages.
+"""Build the link-in-bio funnel (static HTML) for GitHub Pages.
 
-Renders config.link_in_bio into _site/index.html using the brand colors. The
-"Latest Post" link auto-fills with the newest IG permalink (best-effort via the
-Meta API); links with no URL yet (affiliate/lead-magnet/product placeholders)
-are skipped until you fill them in config.yaml.
+Writes _site/index.html (the bio links) and, if affiliate tools are configured,
+_site/tools.html (the "AI Tools I Recommend" page). The bio's "Latest Post" link
+auto-fills with the newest IG permalink; its affiliate slot auto-links to
+tools.html. Affiliate URLs get UTM tags for click visibility. Empty-URL bio
+links (unfilled placeholders) are skipped.
 
     python -m scripts.build_linkbio
 """
@@ -37,35 +38,24 @@ def latest_permalink():
         return None
 
 
-def render(cfg):
-    bio = cfg.get("link_in_bio", {})
-    colors = cfg.get("brand_colors", {})
+def add_utm(url, aff):
+    if not url:
+        return url
+    sep = "&" if "?" in url else "?"
+    return (f"{url}{sep}utm_source={aff.get('utm_source','instagram')}"
+            f"&utm_medium=affiliate&utm_campaign={aff.get('utm_campaign','bio')}")
+
+
+def _shell(colors, title, tagline, inner_html, footer_html):
     bg = colors.get("background", "#1a1a2e")
     card = colors.get("secondary_bg", "#16213e")
     accent = colors.get("accent", "#e94560")
     text = colors.get("text_primary", "#ffffff")
-    latest = latest_permalink() or bio.get("profile_url", "#")
-
-    buttons = []
-    for link in bio.get("links", []):
-        url = link.get("url") or ""
-        if not url and "latest" in link.get("label", "").lower():
-            url = latest
-        if not url:
-            continue  # placeholder not ready yet
-        label = html.escape(f'{link.get("emoji","")} {link.get("label","")}'.strip())
-        buttons.append(
-            f'<a class="btn" href="{html.escape(url)}" target="_blank" rel="noopener">{label}</a>'
-        )
-
-    title = html.escape(bio.get("title", ""))
-    tagline = html.escape(bio.get("tagline", ""))
-    profile = html.escape(bio.get("profile_url", "#"))
     return f"""<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{title}</title>
+<title>{html.escape(title)}</title>
 <style>
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{ background:{bg}; color:{text}; font-family:-apple-system,Segoe UI,Roboto,sans-serif;
@@ -77,25 +67,71 @@ def render(cfg):
          padding:18px; margin:14px 0; border-radius:14px; font-size:1.05rem; font-weight:600;
          border:1px solid rgba(255,255,255,.06); transition:transform .08s, background .2s; }}
   .btn:hover {{ background:{accent}; transform:translateY(-2px); }}
-  footer {{ margin-top:36px; }}
+  .btn small {{ display:block; font-weight:400; font-size:.82rem; color:#a0a0a0; margin-top:5px; }}
+  .disclosure {{ color:#777; font-size:.75rem; margin:18px 4px 0; line-height:1.4; }}
+  footer {{ margin-top:34px; }}
   footer a {{ color:{accent}; text-decoration:none; font-weight:600; }}
 </style></head>
 <body><div class="wrap">
-  <h1>{title}</h1>
-  <p class="tag">{tagline}</p>
-  {chr(10).join("  " + b for b in buttons)}
-  <footer><a href="{profile}" target="_blank" rel="noopener">@ Follow on Instagram</a></footer>
+  <h1>{html.escape(title)}</h1>
+  <p class="tag">{html.escape(tagline)}</p>
+{inner_html}
+  <footer>{footer_html}</footer>
 </div></body></html>
 """
+
+
+def render_bio(cfg, has_tools):
+    bio = cfg.get("link_in_bio", {})
+    latest = latest_permalink() or bio.get("profile_url", "#")
+    buttons = []
+    for link in bio.get("links", []):
+        url = link.get("url") or ""
+        label_l = link.get("label", "").lower()
+        if not url and "latest" in label_l:
+            url = latest
+        elif not url and has_tools and "recommend" in label_l:
+            url = "tools.html"  # auto-link the affiliate slot
+        if not url:
+            continue
+        label = html.escape(f'{link.get("emoji","")} {link.get("label","")}'.strip())
+        ext = "" if url == "tools.html" else ' target="_blank" rel="noopener"'
+        buttons.append(f'  <a class="btn" href="{html.escape(url)}"{ext}>{label}</a>')
+    profile = html.escape(bio.get("profile_url", "#"))
+    footer = f'<a href="{profile}" target="_blank" rel="noopener">@ Follow on Instagram</a>'
+    return _shell(cfg.get("brand_colors", {}), bio.get("title", ""),
+                  bio.get("tagline", ""), "\n".join(buttons), footer)
+
+
+def render_tools(cfg):
+    aff = cfg.get("affiliate", {})
+    cards = []
+    for t in aff.get("tools", []):
+        url = html.escape(add_utm(t.get("url", ""), aff))
+        name = html.escape(f'{t.get("emoji","")} {t.get("name","")}'.strip())
+        blurb = html.escape(t.get("blurb", ""))
+        cards.append(f'  <a class="btn" href="{url}" target="_blank" rel="noopener sponsored">'
+                     f'{name}<small>{blurb}</small></a>')
+    cards.append('  <p class="disclosure">Some links above are affiliate links — '
+                 'I may earn a small commission at no extra cost to you. I only '
+                 'recommend tools I actually use.</p>')
+    footer = '<a href="index.html">&larr; Back</a>'
+    return _shell(cfg.get("brand_colors", {}), "AI Tools I Recommend",
+                  "The tools I actually use, daily 👇", "\n".join(cards), footer)
 
 
 def main():
     cfg = yaml.safe_load(open("config.yaml"))
     os.makedirs(OUT_DIR, exist_ok=True)
-    out = os.path.join(OUT_DIR, "index.html")
-    with open(out, "w") as f:
-        f.write(render(cfg))
-    print(f"build_linkbio: wrote {out}")
+    has_tools = bool(cfg.get("affiliate", {}).get("tools"))
+
+    with open(os.path.join(OUT_DIR, "index.html"), "w") as f:
+        f.write(render_bio(cfg, has_tools))
+    print(f"build_linkbio: wrote {OUT_DIR}/index.html")
+    if has_tools:
+        with open(os.path.join(OUT_DIR, "tools.html"), "w") as f:
+            f.write(render_tools(cfg))
+        print(f"build_linkbio: wrote {OUT_DIR}/tools.html")
 
 
 if __name__ == "__main__":

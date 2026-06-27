@@ -53,8 +53,20 @@ link_in_bio:
   links:
     - { emoji: "🆕", label: "My Latest Post",            url: "" }   # auto: newest permalink
     - { emoji: "🎁", label: "Free: Top 50 AI Tools (PDF)", url: "" } # lead magnet (task #10)
-    - { emoji: "🛠️", label: "AI Tools I Recommend",       url: "" } # affiliate (task #8)
+    - { emoji: "🛠️", label: "AI Tools I Recommend",       url: "" } # affiliate — auto: tools.html
     - { emoji: "🛒", label: "The AI Productivity Pack",    url: "" } # product (task #9)
+
+# ── Affiliate engine (#8) ─────────────────────────────────────────
+# Replace the example URLs with YOUR real affiliate links (sign up for each
+# tool's program). These render on the "Tools I Recommend" page (tools.html),
+# linked from the bio. UTM tags are appended for click visibility.
+affiliate:
+  utm_source: "instagram"
+  utm_campaign: "bio_tools"
+  tools:
+    - { emoji: "🤖", name: "ChatGPT Plus",  url: "https://example.com/aff/chatgpt", blurb: "The AI I use daily for writing & code" }
+    - { emoji: "🎨", name: "Canva Pro",     url: "https://example.com/aff/canva",   blurb: "Design scroll-stopping carousels fast" }
+    - { emoji: "✍️", name: "Notion AI",     url: "https://example.com/aff/notion",  blurb: "Notes & docs that write themselves" }
 
 # ── Reels ─────────────────────────────────────────────────────────
 # A "reel" here = the same carousel slides rendered as a vertical slideshow

@@ -6,14 +6,24 @@ class ContentAgent:
     def __init__(self, config):
         self.brand_voice = config["brand_voice"]
         self.niche = config["niche"]
+        self.affiliate_tools = [t.get("name", "") for t in config.get("affiliate", {}).get("tools", [])]
 
     def generate_carousel(self, idea):
+        affiliate = ""
+        if self.affiliate_tools:
+            affiliate = (
+                f"\nMONETIZATION: If any of these tools we recommend is GENUINELY relevant to "
+                f"this topic, mention it naturally in the content and add a soft CTA in the "
+                f"caption like 'I use [tool] for this — link in bio 🔗'. Never force it. "
+                f"Tools: {', '.join(self.affiliate_tools)}\n"
+            )
         prompt = f"""Create a complete Instagram carousel post.
 
 IDEA: {idea['hook']}
 OUTLINE: {json.dumps(idea['outline']) if isinstance(idea['outline'], list) else idea['outline']}
 
 BRAND VOICE: {self.brand_voice}
+{affiliate}
 
 Generate exactly this JSON structure:
 {{
