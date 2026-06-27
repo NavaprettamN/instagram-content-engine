@@ -19,8 +19,7 @@ Synced from Notion "Let's Ship" → Tasks database (linked to Instagram Content 
 | # | Task | Priority | Dates | Status |
 |---|---|---|---|---|
 | 8 | **Affiliate link engine** — Sovrn Commerce auto-affiliation live on tools.html (real merchant URLs → affiliate links client-side); bio auto-links; content nudges "link in bio". ✅ deployed. NB: only Sovrn-covered merchants actually earn (hover → redirect.viglink.com to confirm) | 🟣 Urgent | Aug 1–31 | ✅ |
-| 9 | **Digital product pipeline** — "AI Productivity Pack" PDF generated (30 prompts, 8 categories, branded; scripts/build_product.py). Private/gitignored | 🔴 High | Aug 15–Sep 15 | 🔄 In progress |
-| | ↳ **Product DONE** (generated_content/ai_productivity_pack.pdf). **Pending you:** upload to Gumroad → set price → paste product URL → I wire the bio "Shop" slot. | | | |
+| 9 | **Digital product pipeline** — "AI Productivity Pack" PDF (30 prompts, 8 categories; scripts/build_product.py) live on Gumroad, wired into bio "Shop" slot. ✅ deployed | 🔴 High | Aug 15–Sep 15 | ✅ |
 | 10 | **Lead magnet + email capture** — Free "AI Tools Cheat Sheet" guide (guide.html) + Kit email-capture form embedded, linked from bio. ✅ live & deployed | 🔴 High | Sep 1–30 | ✅ |
 | 11 | **Media kit generator** — Auto-generated from analytics for brand sponsorships ($200–1K/post) | 🟡 Medium | Oct 1–15 | ❌ |
 | 12 | **Sponsored slot scheduler** — Rate card + calendar for paid posts alongside organic content | 🟡 Medium | Oct 15–31 | ❌ |
