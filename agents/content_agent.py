@@ -81,7 +81,7 @@ BRAND VOICE: {self.brand_voice}
 Return JSON:
 {{
   "hook": "3-6 word on-screen title — punchy, scroll-stopping",
-  "script": "The spoken narration as ONE flowing voiceover, 110-130 words. First 3 seconds MUST be a pattern-interrupt hook. Specific, valuable, energetic, short sentences. End with a verbal 'follow for more' CTA. NO emojis, NO hashtags, NO stage directions, NO markdown — only the words to be spoken aloud.",
+  "script": "The spoken narration as ONE flowing voiceover. HARD LIMIT 80 words (~30 seconds) — count them. First 3 seconds MUST be a pattern-interrupt hook. Specific, valuable, energetic, very short sentences. End with a verbal 'follow for more' CTA. NO emojis, NO hashtags, NO stage directions, NO markdown, NO quotes — only the words spoken aloud.",
   "caption": "Instagram caption: hook line, brief value, a save/share CTA, a question, and a follow CTA using {self.handle}."
 }}
 Rules: the script must sound natural read aloud; use numbers/specifics over fluff.""",

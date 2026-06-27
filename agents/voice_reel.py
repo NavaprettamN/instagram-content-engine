@@ -17,13 +17,14 @@ class VoiceReelAgent:
         c = config.get("brand_colors", {})
         self.bg = c.get("background", "#1a1a2e").replace("#", "0x")
         self.voice = config.get("reel_voice", "en-US-AriaNeural")
+        self.rate = config.get("reel_voice_rate", "+12%")  # energetic + shorter
 
     def _tts(self, text, mp3_path):
         """Synthesize voiceover; return word cues from sentence-level timings."""
         import edge_tts
 
         async def go():
-            comm = edge_tts.Communicate(text, self.voice)
+            comm = edge_tts.Communicate(text, self.voice, rate=self.rate)
             sents = []
             with open(mp3_path, "wb") as f:
                 async for ch in comm.stream():
@@ -46,6 +47,8 @@ class VoiceReelAgent:
         """script -> voiceover + captions over a branded bg + ducked music -> mp4."""
         base = os.path.splitext(out_path)[0]
         voice_mp3 = base + "_voice.mp3"
+        # safety cap: reels must stay short even if the model overshoots
+        script = " ".join(script.split()[:70])
         words = self._tts(script, voice_mp3)
         dur = (words[-1]["end"] if words else 30.0) + 0.8
         ass = write_ass(words, base + ".ass", title=hook)
