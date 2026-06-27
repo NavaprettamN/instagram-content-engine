@@ -18,8 +18,7 @@ Synced from Notion "Let's Ship" → Tasks database (linked to Instagram Content 
 
 | # | Task | Priority | Dates | Status |
 |---|---|---|---|---|
-| 8 | **Affiliate link engine** — config registry → auto-built UTM-tagged "Tools I Recommend" page (tools.html) linked from bio; content nudges "link in bio". (Captions can't hold clickable links; commission $ lives in each network's dashboard.) | 🟣 Urgent | Aug 1–31 | 🔄 In progress |
-| | ↳ **Scaffolding DONE** (tools.html, bio auto-link, UTM, FTC disclosure, content nudge). **Pending:** affiliate-route decision + 1-time signup. Researched (2026): full zero-config is impossible (income needs your identity/payment). Options: Sovrn Commerce auto-convert API (1 key, ~25% cut, shoppable-focused) · CJ/Affiliate.com MCP · direct SaaS programs (best % for AI niche, manual URLs). Amazon PA-API ❌ (gated behind 3→10 sales). | | | |
+| 8 | **Affiliate link engine** — Sovrn Commerce auto-affiliation live on tools.html (real merchant URLs → affiliate links client-side); bio auto-links; content nudges "link in bio". ✅ deployed. NB: only Sovrn-covered merchants actually earn (hover → redirect.viglink.com to confirm) | 🟣 Urgent | Aug 1–31 | ✅ |
 | 9 | **Digital product pipeline** — Create "AI Productivity Pack" (templates, prompts). Sell via Gumroad/Lemon Squeezy | 🔴 High | Aug 15–Sep 15 | ❌ |
 | 10 | **Lead magnet + email capture** — Free "AI Tools Cheat Sheet" guide (guide.html) + Kit email-capture form embedded, linked from bio. ✅ live & deployed | 🔴 High | Sep 1–30 | ✅ |
 | 11 | **Media kit generator** — Auto-generated from analytics for brand sponsorships ($200–1K/post) | 🟡 Medium | Oct 1–15 | ❌ |
@@ -58,7 +57,7 @@ Synced from Notion "Let's Ship" → Tasks database (linked to Instagram Content 
 - Rich analytics: per-post performance + reach-weighted scoring, best/worst, follower-growth trend, correct IG-Login insight metrics (reach/saved/shares/total_interactions)
 - Story auto-promo bot (reposts latest to Stories daily, once per post)
 - Performance feedback loop (top posts → ResearchAgent makes more of what works)
-- Affiliate engine #8 *scaffolding* (UTM-tagged tools.html + bio auto-link + FTC disclosure + content nudge) — full automation pending signup decision
+- Affiliate engine #8 COMPLETE (Sovrn Commerce auto-affiliation live on tools.html + bio auto-link + FTC disclosure + content nudge)
 - Lead magnet #10 COMPLETE (cheat-sheet guide + Kit email-capture form, deployed to Pages, linked from bio)
 
 **✅ PHASE 1 COMPLETE** — growth engine done. Next: Phase 2 monetization (#8 affiliate is the first revenue stream).
