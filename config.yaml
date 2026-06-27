@@ -54,7 +54,7 @@ link_in_bio:
     - { emoji: "🆕", label: "My Latest Post",            url: "" }   # auto: newest permalink
     - { emoji: "🎁", label: "Free: The AI Tools Cheat Sheet", url: "" } # lead magnet — auto: guide.html
     - { emoji: "🛠️", label: "AI Tools I Recommend",       url: "" } # affiliate — auto: tools.html
-    - { emoji: "🛒", label: "The AI Productivity Pack",    url: "" } # product (task #9)
+    - { emoji: "🛒", label: "The AI Productivity Pack",    url: "https://9001784317547.gumroad.com/l/dkvmqk" } # product (task #9)
 
 # ── Affiliate engine (#8) ─────────────────────────────────────────
 # Replace the example URLs with YOUR real affiliate links (sign up for each
