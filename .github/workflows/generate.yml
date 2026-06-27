@@ -16,6 +16,9 @@ jobs:
           python-version: "3.11"
           cache: pip
 
+      - name: Install ffmpeg (reel ideas render a slideshow video)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
       - run: pip install -r requirements.txt
 
       - name: Generate content and designs for approved ideas
@@ -46,34 +49,42 @@ jobs:
           reel_cut = round(config.get('reel_ratio', 0.4) * 5)  # ids with id%5 < cut -> reel
 
           approved = get_ideas(status='approved')
+          errors = 0
           for idea in approved:
               if idea.get('generated_content'):
                   continue  # already processed
-              print(f'Processing idea {idea[\"id\"]}: {idea[\"hook\"]}')
-              content = ca.generate_carousel(idea)  # always carousel slides (reel = slideshow of these)
-              local_paths = da.generate_carousel_images(content, idea['id'])
-              hashtag_sets = ha.generate_hashtag_sets(idea['hook'])  # 3 rotating sets
+              try:
+                  print(f'Processing idea {idea[\"id\"]}: {idea[\"hook\"]}')
+                  content = ca.generate_carousel(idea)  # always carousel slides (reel = slideshow of these)
+                  local_paths = da.generate_carousel_images(content, idea['id'])
+                  hashtag_sets = ha.generate_hashtag_sets(idea['hook'])  # 3 rotating sets
 
-              caption = idea.get('caption_draft') or ''
-              as_reel = (idea['id'] % 5) < reel_cut
-              if as_reel:
-                  base = f'{config[\"output_dir\"]}/carousel_{idea[\"id\"]}'
-                  music = ma.pick_track(idea['hook'], f'{base}/music.mp3')  # CC track or None
-                  reel = va.slides_to_reel(local_paths, out_path=f'{base}/reel.mp4',
-                                           audio_path=(music['path'] if music else None))
-                  media = [pa.upload_video_to_hosting(reel)]
-                  fmt = 'reel'
-                  if music:
-                      caption = (caption + '\n\n' + music['credit']).strip()  # CC attribution
-              else:
-                  media = [pa.upload_image_to_hosting(p) for p in local_paths]
-                  fmt = 'carousel'
-              update_idea(idea['id'],
-                          generated_content=json.dumps(content),
-                          image_paths=json.dumps(media),
-                          hashtags=json.dumps(hashtag_sets),
-                          caption_draft=caption,
-                          content_type=fmt,
-                          status='designed')
-              print(f'  -> designed as {fmt}, {len(media)} media hosted')
+                  caption = idea.get('caption_draft') or ''
+                  as_reel = (idea['id'] % 5) < reel_cut
+                  if as_reel:
+                      base = f'{config[\"output_dir\"]}/carousel_{idea[\"id\"]}'
+                      music = ma.pick_track(idea['hook'], f'{base}/music.mp3')  # CC track or None
+                      reel = va.slides_to_reel(local_paths, out_path=f'{base}/reel.mp4',
+                                               audio_path=(music['path'] if music else None))
+                      media = [pa.upload_video_to_hosting(reel)]
+                      fmt = 'reel'
+                      if music:
+                          caption = (caption + '\n\n' + music['credit']).strip()  # CC attribution
+                  else:
+                      media = [pa.upload_image_to_hosting(p) for p in local_paths]
+                      fmt = 'carousel'
+                  update_idea(idea['id'],
+                              generated_content=json.dumps(content),
+                              image_paths=json.dumps(media),
+                              hashtags=json.dumps(hashtag_sets),
+                              caption_draft=caption,
+                              content_type=fmt,
+                              status='designed')
+                  print(f'  -> designed as {fmt}, {len(media)} media hosted')
+              except Exception as e:
+                  # one bad idea (ffmpeg/Gemini/hosting) must not kill the batch
+                  errors += 1
+                  print(f'  !! idea {idea[\"id\"]} failed, skipping: {str(e)[:160]}')
+          if errors and errors == len([i for i in approved if not i.get('generated_content')]):
+              raise SystemExit(f'All {errors} ideas failed')  # surface a fully-broken run
           "
