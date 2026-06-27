@@ -39,6 +39,20 @@ def latest_permalink():
         return None
 
 
+def sovrn_snippet(key):
+    """Sovrn Commerce JS — auto-converts outbound merchant links to affiliate links."""
+    return (
+        "<script type=\"text/javascript\">\n"
+        f"  var vglnk = {{key: '{key}'}};\n"
+        "  (function(d, t) {\n"
+        "    var s = d.createElement(t); s.type = 'text/javascript'; s.async = true;\n"
+        "    s.src = '//cdn.viglink.com/api/vglnk.js';\n"
+        "    var r = d.getElementsByTagName(t)[0]; r.parentNode.insertBefore(s, r);\n"
+        "  }(document, 'script'));\n"
+        "</script>\n"
+    )
+
+
 def add_utm(url, aff):
     if not url:
         return url
@@ -127,8 +141,12 @@ def render_tools(cfg):
                  'I may earn a small commission at no extra cost to you. I only '
                  'recommend tools I actually use.</p>')
     footer = '<a href="index.html">&larr; Back</a>'
-    return _shell(cfg.get("brand_colors", {}), "AI Tools I Recommend",
+    page = _shell(cfg.get("brand_colors", {}), "AI Tools I Recommend",
                   "The tools I actually use, daily 👇", "\n".join(cards), footer)
+    key = aff.get("sovrn_key")
+    if key:  # Sovrn auto-affiliates the outbound links on this page
+        page = page.replace("</body>", sovrn_snippet(key) + "</body>")
+    return page
 
 
 def render_guide(cfg, tools):

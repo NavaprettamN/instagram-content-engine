@@ -68,12 +68,18 @@ lead_magnet:
   signup_embed: '<script async data-uid="6bf19048b3" src="https://navaprettam-n.kit.com/6bf19048b3/index.js"></script>'
 
 affiliate:
+  # Sovrn Commerce auto-converts the real merchant URLs below into affiliate
+  # links client-side (covered merchants only). Key is public by design (it ships
+  # in the page JS). Add more tools freely — no affiliate URLs needed.
+  sovrn_key: "397ce387a618e8a27eac7a307de7b5a1"
   utm_source: "instagram"
   utm_campaign: "bio_tools"
   tools:
-    - { emoji: "🤖", name: "ChatGPT Plus",  url: "https://example.com/aff/chatgpt", blurb: "The AI I use daily for writing & code" }
-    - { emoji: "🎨", name: "Canva Pro",     url: "https://example.com/aff/canva",   blurb: "Design scroll-stopping carousels fast" }
-    - { emoji: "✍️", name: "Notion AI",     url: "https://example.com/aff/notion",  blurb: "Notes & docs that write themselves" }
+    - { emoji: "🤖", name: "ChatGPT",  url: "https://chatgpt.com",       blurb: "The AI I use daily for writing & code" }
+    - { emoji: "🎨", name: "Canva",    url: "https://www.canva.com",     blurb: "Design scroll-stopping carousels fast" }
+    - { emoji: "✍️", name: "Notion",   url: "https://www.notion.so",     blurb: "Notes & docs that write themselves" }
+    - { emoji: "🔎", name: "Perplexity", url: "https://www.perplexity.ai", blurb: "AI search with real sources" }
+    - { emoji: "🎬", name: "CapCut",   url: "https://www.capcut.com",    blurb: "Auto-caption & edit reels fast" }
 
 # ── Reels ─────────────────────────────────────────────────────────
 # A "reel" here = the same carousel slides rendered as a vertical slideshow
