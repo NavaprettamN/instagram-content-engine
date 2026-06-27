@@ -45,9 +45,14 @@ publish.yml (08:00 / 14:00 / 20:00 UTC)
   → PublishingAgent.publish_carousel() → Instagram API
   → Supabase: status=published, post_id
 
+comment_reply.yml (every 2h, :30)
+  poll recent media comments → Gemini drafts on-brand replies (SKIP spam/negative)
+  → POST /{comment}/replies. Replied ids tracked in config.replied_comments.
+
 analytics.yml (Sunday 20:00 UTC)
   Meta media insights → Gemini weekly analysis → Supabase: analytics_snapshots
   → ResearchAgent reads this on next run to close the feedback loop
+  → AnalyticsAgent.best_posting_hours() → config.best_hours (publish.yml gate)
 
 clip.yml (Sunday 16:00 UTC, weekly — heaviest job)
   YouTube CC search (videoLicense=creativeCommon) → yt-dlp download
@@ -92,6 +97,15 @@ JAMENDO_CLIENT_ID       # Jamendo API (MusicAgent reel music) — optional; unse
 GH_PAT                  # GitHub PAT with secrets:write — only for refresh_token.yml
 META_APP_ID / META_APP_SECRET  # Legacy; not used by current publish/refresh flow
 ```
+
+### Monetization Roadmap
+
+See `tasks.md` for the full growth → monetization roadmap (synced with Notion "Let's Ship" → Tasks database). Current focus areas by priority:
+
+1. **Best-Time-to-Post optimizer** — Analytics-driven cron tuning (Jul 1–7)
+2. **Comment auto-reply agent** — Algorithm boost via 1hr engagement window (Jul 7–14)
+3. **Affiliate link engine** — First revenue stream, $500–2K/mo target (Aug 1–31)
+4. **Link-in-bio manager** — Conversion funnel: content → affiliate → lead magnet → product (Jul 21–28)
 
 ### config.yaml
 

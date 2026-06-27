@@ -7,7 +7,7 @@ Synced from Notion "Let's Ship" → Tasks database (linked to Instagram Content 
 | # | Task | Priority | Dates | Status |
 |---|---|---|---|---|
 | 1 | **Best-Time-to-Post optimizer** — AnalyticsAgent analyzes engagement by hour/day → auto-tunes publish.yml cron slots | 🔴 High | Jul 1–7 | ✅ |
-| 2 | **Comment auto-reply agent** — Auto-reply to comments within 1hr using Gemini contextual replies | 🔴 High | Jul 7–14 | ❌ |
+| 2 | **Comment auto-reply agent** — Auto-reply to comments within 1hr using Gemini contextual replies | 🔴 High | Jul 7–14 | ✅ |
 | 3 | **Stories engagement bot** — Auto-post daily story with polls/quizzes/Q&A stickers | 🟡 Medium | Jul 14–21 | ❌ |
 | 4 | **Link-in-bio manager** — Single bio link funnel: latest post → affiliate offers → lead magnet → product | 🔴 High | Jul 21–28 | ❌ |
 | 5 | **Content performance dashboard** — "Post X topic at Y time for Z engagement". Rank topics by saves/shares/comments | 🟡 Medium | Jul 28–Aug 4 | ❌ |
@@ -51,4 +51,6 @@ Synced from Notion "Let's Ship" → Tasks database (linked to Instagram Content 
 - MusicAgent (Jamendo CC music baked into reels)
 - CC YouTube clipper (cookies + deno + EJS → captioned reel, validated in CI)
 - Best-Time-to-Post optimizer (adaptive gate: analytics best-hours, fallback slots, daily quota)
+- Comment auto-reply agent (polls comments, Gemini replies, SKIP for spam, every 2h)
+- Gemini 429/quota retry in shared _llm client
 - OpenCode MCP setup (GitHub + Notion MCP)

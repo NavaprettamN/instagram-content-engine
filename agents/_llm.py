@@ -4,7 +4,7 @@ import json
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from google.genai.errors import ServerError
+from google.genai.errors import ServerError, ClientError
 
 load_dotenv()
 
@@ -31,7 +31,7 @@ def generate_text(prompt, system=None, json_response=False, temperature=0.7):
     last_error = None
     for attempt, delay in enumerate([0] + delays, 1):
         if delay:
-            print(f"Gemini 503 — retrying in {delay}s (attempt {attempt}/{len(delays)+1})...")
+            print(f"Gemini busy — retrying in {delay}s (attempt {attempt}/{len(delays)+1})...")
             time.sleep(delay)
         try:
             response = _get_client().models.generate_content(
@@ -43,6 +43,13 @@ def generate_text(prompt, system=None, json_response=False, temperature=0.7):
             return json.loads(text) if json_response else text
         except ServerError as e:
             if "503" in str(e) or "UNAVAILABLE" in str(e):
+                last_error = e
+                continue
+            raise
+        except ClientError as e:
+            # 429 RESOURCE_EXHAUSTED — rate/quota limit. Retry (recovers per-minute
+            # limits); a true daily-cap exhaustion will retry then raise.
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
                 last_error = e
                 continue
             raise
