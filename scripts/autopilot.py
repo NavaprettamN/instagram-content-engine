@@ -35,8 +35,10 @@ def main():
     pa = PublishingAgent(config)
     hosted = [pa.upload_image_to_hosting(p) for p in local_paths]
     hashtag_sets = HashtagAgent(config).generate_hashtag_sets(idea["hook"])
+    # prefer the affiliate-aware content_agent caption over research's draft
+    idea["caption_draft"] = content.get("caption") or idea.get("caption_draft")
     update_idea(idea["id"], generated_content=json.dumps(content),
-                image_paths=json.dumps(hosted),
+                image_paths=json.dumps(hosted), caption_draft=idea["caption_draft"],
                 hashtags=json.dumps(hashtag_sets), status="designed")
     idea["hashtags"] = hashtag_sets  # so compose_caption sees the fresh sets
     caption = compose_caption(idea, count_ideas("published"))

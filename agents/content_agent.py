@@ -6,6 +6,7 @@ class ContentAgent:
     def __init__(self, config):
         self.brand_voice = config["brand_voice"]
         self.niche = config["niche"]
+        self.handle = config.get("instagram_handle", "")
         self.affiliate_tools = [t.get("name", "") for t in config.get("affiliate", {}).get("tools", [])]
 
     def generate_carousel(self, idea):
@@ -49,13 +50,19 @@ Rules:
 - Write at 8th grade reading level
 - No clichés like "game-changer" or "in today's world"
 - Optimize for SAVES and SHARES (the strongest reach signals): make the content reference-worthy and worth sending to a friend
+- In the follow CTA, use the EXACT handle {self.handle} — never a placeholder like "@[YourHandle]"
 """
-        return generate_text(
+        result = generate_text(
             prompt,
             system=f"Expert Instagram content creator for the {self.niche} niche. Return only valid JSON.",
             json_response=True,
             temperature=0.7,
         )
+        # belt-and-suspenders: scrub any placeholder handle the model leaves behind
+        if isinstance(result, dict) and result.get("caption") and self.handle:
+            for ph in ("@[YourHandle]", "[YourHandle]", "@YourHandle", "[your handle]", "@[handle]"):
+                result["caption"] = result["caption"].replace(ph, self.handle)
+        return result
 
     def generate_reel_script(self, idea):
         prompt = f"""Create a complete Instagram Reel script.

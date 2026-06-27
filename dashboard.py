@@ -147,6 +147,7 @@ elif page == "✅ Approval Center":
                         update_idea(item["id"],
                                     generated_content=json.dumps(content),
                                     image_paths=json.dumps(paths),
+                                    caption_draft=content.get("caption") or item.get("caption_draft"),
                                     status="designed")
                         st.success("Content generated!")
                         st.rerun()
@@ -255,6 +256,7 @@ elif page == "🚀 Run Agents":
                         update_idea(idea["id"],
                                     generated_content=json.dumps(content),
                                     image_paths=json.dumps(paths),
+                                    caption_draft=content.get("caption") or idea.get("caption_draft"),
                                     status="designed")
                         count += 1
                 st.success(f"Generated content for {count} ideas!")

@@ -59,7 +59,10 @@ jobs:
                   local_paths = da.generate_carousel_images(content, idea['id'])
                   hashtag_sets = ha.generate_hashtag_sets(idea['hook'])  # 3 rotating sets
 
-                  caption = idea.get('caption_draft') or ''
+                  # content_agent's caption is richer + affiliate-aware (link-in-bio
+                  # nudge, save/share CTA) and carries no inline hashtags; prefer it
+                  # over research's caption_draft so those actually reach the post.
+                  caption = content.get('caption') or idea.get('caption_draft') or ''
                   as_reel = (idea['id'] % 5) < reel_cut
                   if as_reel:
                       base = f'{config[\"output_dir\"]}/carousel_{idea[\"id\"]}'
