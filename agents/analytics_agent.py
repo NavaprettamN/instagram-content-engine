@@ -138,6 +138,13 @@ Be specific. Use numbers. No vague advice."""
         analysis = self.generate_weekly_analysis(summary, perf)
         save_analytics({"date": today, "analysis": analysis})
 
+        # Feed concrete winners back into research (#7): the top-scoring posts.
+        top = sorted(perf, key=lambda p: p["score"], reverse=True)[:3]
+        if any(t["score"] for t in top):
+            set_config("top_performers", json.dumps(
+                [{"hook": t["caption"], "type": t["type"], "score": t["score"],
+                  "saved": t["saved"], "shares": t["shares"]} for t in top]))
+
         # Follower-growth trend (config history — no schema change).
         fc = summary.get("followers_count")
         if fc is not None:

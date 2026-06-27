@@ -97,6 +97,22 @@ class PublishingAgent:
         )
         return result.json()
 
+    def publish_story(self, image_url):
+        """Post a plain image to Stories. Note: the API can't add link/poll/quiz
+        stickers — this just reposts the visual to keep Stories active + drive
+        profile visits."""
+        self._require_meta()
+        container = requests.post(
+            f"{self.base_url}/{self.ig_user_id}/media",
+            data={"image_url": image_url, "media_type": "STORIES", "access_token": self.access_token},
+        ).json()
+        time.sleep(5)
+        result = requests.post(
+            f"{self.base_url}/{self.ig_user_id}/media_publish",
+            data={"creation_id": container.get("id"), "access_token": self.access_token},
+        )
+        return result.json()
+
     def publish_reel(self, video_url, caption, cover_url=None):
         self._require_meta()
         data = {

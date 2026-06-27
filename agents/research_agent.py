@@ -3,7 +3,7 @@ import requests
 import json
 from datetime import datetime
 from agents._llm import generate_text
-from agents._db import save_idea, get_analytics
+from agents._db import save_idea, get_analytics, get_config
 from agents.trend_agent import TrendAgent
 
 
@@ -66,6 +66,14 @@ class ResearchAgent:
             learnings = (
                 "\nWHAT WORKED LAST WEEK (lean into these patterns, avoid what underperformed):\n"
                 f"{snaps[0]['analysis']}\n"
+            )
+        # Concrete winners (#7): our actual top-scoring posts by saves/shares.
+        top = get_config("top_performers")
+        if top:
+            learnings += (
+                "\nOUR BEST-PERFORMING POSTS SO FAR (create more ideas in this vein — "
+                "same angle/format/topic that earned the most saves & shares):\n"
+                f"{top}\n"
             )
 
         prompt = f"""You are a content strategist for an Instagram page about {self.niche}.
