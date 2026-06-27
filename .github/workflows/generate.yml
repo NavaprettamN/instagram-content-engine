@@ -46,7 +46,6 @@ jobs:
           pa = PublishingAgent(config)
           va = VideoAgent(config)
           ma = MusicAgent(config)
-          reel_cut = round(config.get('reel_ratio', 0.4) * 5)  # ids with id%5 < cut -> reel
 
           approved = get_ideas(status='approved')
           errors = 0
@@ -63,7 +62,7 @@ jobs:
                   # nudge, save/share CTA) and carries no inline hashtags; prefer it
                   # over research's caption_draft so those actually reach the post.
                   caption = content.get('caption') or idea.get('caption_draft') or ''
-                  as_reel = (idea['id'] % 5) < reel_cut
+                  as_reel = (idea['id'] % 3) != 0  # 2 of every 3 posts are reels, 1 carousel
                   if as_reel:
                       base = f'{config[\"output_dir\"]}/carousel_{idea[\"id\"]}'
                       music = ma.pick_track(idea['hook'], f'{base}/music.mp3')  # CC track or None

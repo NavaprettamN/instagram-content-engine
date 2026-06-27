@@ -9,6 +9,11 @@ name: Clip Agent — CC YouTube → Reel (weekly)
 # This dispatch entry is kept for when a PO-token/proxy setup is added.
 on:
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Render + host the clip but do NOT post it (preview captions)"
+        type: boolean
+        default: true
 
 jobs:
   clip:
@@ -41,6 +46,7 @@ jobs:
           INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
           SUPABASE_URL:      ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY:      ${{ secrets.SUPABASE_KEY }}
+          CLIP_DRY_RUN:      ${{ inputs.dry_run && '1' || '' }}
         run: |
           # YouTube blocks CI IPs; cookies from a logged-in session get past it.
           if [ -n "$YOUTUBE_COOKIES" ]; then

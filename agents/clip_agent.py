@@ -72,12 +72,18 @@ class ClipAgent:
 
     # ── transcribe ──────────────────────────────────────────────────
     def transcribe(self, video_path):
-        """[{start,end,word}] via faster-whisper base (CPU, int8)."""
+        """[{start,end,word}] via faster-whisper. task='translate' forces ENGLISH
+        output regardless of the video's spoken language (English in -> English out)."""
         from faster_whisper import WhisperModel
         model = WhisperModel("base", device="cpu", compute_type="int8")
-        segments, _ = model.transcribe(video_path, word_timestamps=True)
-        return [{"start": w.start, "end": w.end, "word": w.word}
-                for seg in segments for w in (seg.words or [])]
+        segments, _ = model.transcribe(video_path, task="translate", word_timestamps=True)
+        words = []
+        for seg in segments:
+            if seg.words:
+                words += [{"start": w.start, "end": w.end, "word": w.word} for w in seg.words]
+            else:  # translate sometimes lacks word timings — fall back to the segment
+                words.append({"start": seg.start, "end": seg.end, "word": " " + seg.text.strip()})
+        return words
 
     # ── pick the moment ─────────────────────────────────────────────
     def pick_segment(self, words, title):
@@ -112,38 +118,52 @@ class ClipAgent:
         return seg
 
     # ── cut + reframe + captions ────────────────────────────────────
+    # ASS style: big bold white text, thick black outline, MIDDLE-centered
+    # (Alignment=5). Styling lives in the file, so no fragile ffmpeg force_style.
+    ASS_HEADER = (
+        "[Script Info]\nScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\n\n"
+        "[V4+ Styles]\n"
+        "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, "
+        "BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, "
+        "BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
+        "Style: Default,DejaVu Sans,82,&H00FFFFFF,&H000000FF,&H00000000,&H64000000,"
+        "-1,0,0,0,100,100,0,0,1,5,2,5,80,80,80,1\n\n"
+        "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+    )
+
     @staticmethod
-    def _ts(sec):
+    def _ass_time(sec):
+        sec = max(0.0, sec)
         h, rem = divmod(sec, 3600)
         m, s = divmod(rem, 60)
-        return f"{int(h):02d}:{int(m):02d}:{int(s):02d},{int((s % 1) * 1000):03d}"
+        return f"{int(h):d}:{int(m):02d}:{s:05.2f}"
 
-    def _write_srt(self, words, start, end, srt_path):
-        """Caption lines (~6 words) within [start,end], times rebased to clip start."""
-        seg = [w for w in words if w["end"] > start and w["start"] < end]
-        out, idx, i = [], 1, 0
-        while i < len(seg):
-            group = seg[i:i + 6]
+    def _write_ass(self, words, start, end, ass_path):
+        """Punchy ~3-word centered cues within [start,end], rebased to clip start."""
+        cues = [w for w in words if w["end"] > start and w["start"] < end]
+        lines, i = [], 0
+        while i < len(cues):
+            group = cues[i:i + 3]
             a = max(0.0, group[0]["start"] - start)
             b = max(a + 0.4, group[-1]["end"] - start)
-            text = "".join(w["word"] for w in group).strip()
-            out.append(f"{idx}\n{self._ts(a)} --> {self._ts(b)}\n{text}\n")
-            idx += 1
-            i += 6
-        with open(srt_path, "w") as f:
-            f.write("\n".join(out))
-        return srt_path
+            text = "".join(w["word"] for w in group).strip().replace("\n", " ").upper()
+            if text:
+                lines.append(f"Dialogue: 0,{self._ass_time(a)},{self._ass_time(b)},Default,,0,0,0,,{text}")
+            i += 3
+        with open(ass_path, "w") as f:
+            f.write(self.ASS_HEADER + "\n".join(lines) + "\n")
+        return ass_path
 
     def make_clip(self, video_path, words, seg, out_path):
-        """Cut [start,end], crop/scale to 1080x1920, burn captions.
+        """Cut [start,end], crop/scale to 1080x1920, burn styled middle captions.
         Falls back to an uncaptioned (but valid) clip if ffmpeg lacks libass."""
         start, dur = seg["start"], seg["end"] - seg["start"]
-        srt_path = os.path.splitext(out_path)[0] + ".srt"
-        self._write_srt(words, start, seg["end"], srt_path)
+        ass_path = os.path.splitext(out_path)[0] + ".ass"
+        self._write_ass(words, start, seg["end"], ass_path)
         reframe = "crop='min(iw,ih*9/16)':'min(ih,iw*16/9)',scale=1080:1920,setsar=1"
         tail = "fps=30,format=yuv420p"
-        # plain subtitles= (default style) avoids the force_style comma-escaping trap
-        attempts = [f"{reframe},subtitles={srt_path},{tail}", f"{reframe},{tail}"]
+        # ass= carries its own styling — no force_style escaping needed
+        attempts = [f"{reframe},ass={ass_path},{tail}", f"{reframe},{tail}"]
         last = None
         for vf in attempts:
             try:
@@ -153,7 +173,7 @@ class ClipAgent:
                      "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", out_path],
                     check=True, capture_output=True, text=True,
                 )
-                if "subtitles" not in vf:
+                if "ass=" not in vf:
                     print("ClipAgent: captions skipped (ffmpeg has no libass)")
                 return out_path
             except subprocess.CalledProcessError as e:
