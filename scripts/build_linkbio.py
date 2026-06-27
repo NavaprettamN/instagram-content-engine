@@ -152,6 +152,11 @@ def render_guide(cfg, tools):
 """.format(accent=cfg.get("brand_colors", {}).get("accent", "#e94560"),
            card=cfg.get("brand_colors", {}).get("secondary_bg", "#16213e"))
     body = "\n".join("  " + b for b in blocks)
+    # Optional email-capture form (ESP embed pasted in config) above the list.
+    embed = lm.get("signup_embed") or ""
+    if embed.strip():
+        body = (f'  <div class="signup">{embed}</div>\n'
+                f'  <p class="tag">⬇️ The full list</p>\n{body}')
     footer = ('<a href="tools.html">🛠️ The exact tools I pay for &rarr;</a>'
               if cfg.get("affiliate", {}).get("tools") else '<a href="index.html">&larr; Back</a>')
     page = _shell(cfg.get("brand_colors", {}), lm.get("title", "AI Tools Guide"),

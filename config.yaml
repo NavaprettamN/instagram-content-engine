@@ -63,6 +63,9 @@ link_in_bio:
 lead_magnet:
   title: "The AI Tools Cheat Sheet"
   tagline: "My curated stack to work smarter — free 👇"
+  # Paste your Kit/ConvertKit (or any ESP) inline form EMBED here to capture
+  # emails on the guide page. Leave "" for an ungated free guide.
+  signup_embed: ""
 
 affiliate:
   utm_source: "instagram"
