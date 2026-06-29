@@ -1,4 +1,96 @@
-# Instagram Content Engine — Final Plan ($0/month free stack)
+# PLAN.md
+
+> **Active plan = "Content Quality + Proper Machine" below.** The original
+> build plan is archived at the bottom (historical context).
+
+---
+
+# ▶ ACTIVE: Content Quality + "Proper Machine" Roadmap (2026-06-30)
+
+Goal unchanged: **make money** by growing real reach + followers. This section is
+the source of truth for *content quality + cadence*. Companions: `CLAUDE.md`
+(architecture), `FLOW.md` (maintenance), `tasks.md` (monetization).
+
+## The problem (stated by user)
+
+1. **Reels look bad.** Two formats, both weak:
+   - *Voice reels*: voiceover + captions over a **flat solid-colour background** — nothing moves.
+   - *Vimeo CC clips*: real footage but thin niche pool → dry screen-recordings.
+2. **Carousels are static.** `DesignAgent` renders text on the **same solid background every time** — same colour, same layout.
+3. **No enforced daily shape.**
+
+## Target daily output (the contract)
+
+**Every day: 1 carousel + 2 reels.** Reels = priority reach surface; carousel = the saveable value post.
+
+| Slot (UTC, approx) | Type | Notes |
+|---|---|---|
+| Morning | Reel | b-roll voice reel (primary) |
+| Afternoon | Carousel | redesigned, varied template |
+| Evening | Reel | b-roll voice reel OR Vimeo clip (variety) |
+
+Cron is delayed 60–90 min → slots are targets. New rule: **per-day type quota** — post exactly 2 reels + 1 carousel/day, don't just drain oldest.
+
+## Phase A — Reels that actually move (HIGHEST IMPACT)
+
+Keep the original-voiceover format (reliable, $0, no cookies) but put **real moving stock footage behind the captions** — the format every big faceless AI account uses. Voiceover + b-roll + synced captions + ducked music = scroll-stopping, automated, free.
+
+- New `agents/broll_agent.py` — `fetch_clips(terms, n, seconds) -> [paths]` via **Pexels Video API** (free key), Pixabay fallback. Cache by term.
+- Script → Gemini returns **2–4 visual search terms**; ~1 clip per 7–10s of voice.
+- `voice_reel.py` upgrade: replace `color=` bg with a **concat of b-roll clips**, each cropped to 1080×1920, trimmed to its share of voice duration, dark overlay (caption legibility) + optional Ken-Burns. Captions + title banner on top. Music ducked.
+- Fallback: b-roll fetch fails → solid-colour bg (today's behaviour). Never hard-fail.
+- Hook rewrite: first line = 2-second pattern interrupt. ~30s, energetic TTS.
+
+**Needs:** `PEXELS_API_KEY` (free, instant at pexels.com/api) → `.env` + GH secret.
+
+## Phase B — Carousels with visual variety
+
+`agents/design_agent.py`:
+- **Palette rotation** — 5–6 curated brand-safe schemes, pick by `idea_id % N`.
+- **Background variety** — rotate: gradient / gradient + geometric shapes / Pexels **photo** bg + dark overlay (reuse broll image search). No more flat colour.
+- **Layout templates** — 3–4 hook-slide layouts (centred, left-accent-bar, big-number, quote-card), rotate per post.
+- **Typography** — stronger hierarchy, accent shapes. Keep Inter + footer.
+
+## Phase C — The machine (end-to-end glue)
+
+- **Daily type quota** — `generate.yml` keeps queue ≥2 reels + ≥1 carousel; `publish.yml` posts by type quota not just oldest.
+- **Quality gate** — Gemini scores script/caption (+ thumbnail) 1–10 on hook + clarity; reject & regen below threshold.
+- **Theme rotation** — research tags each idea; avoid repeating angle within N days.
+- **Asset cache** — cache b-roll/photos/music by key.
+- **Vimeo clips = variety, not staple** — 1–2×/week, existing LLM vet.
+- **Observability** — each run logs output; failures surface, FLOW.md = fix map.
+
+## Phase D — Bigger ideas (after A–C)
+
+- Talking-head/avatar reels (defer — complexity/cost).
+- Trending-audio reels (IG API can't attach IG sounds — out of scope).
+- YouTube-from-residential-IP (premium fallback, needs user's Mac/self-hosted runner).
+- Quote cards / memes (high shareability).
+
+## Build order
+
+1. **Phase A** — b-roll voice reels (headline fix). Needs `PEXELS_API_KEY`.
+2. **Phase B** — carousel variety.
+3. **Phase C** — quota + quality gate + cache.
+4. **Phase D** — evaluate after a week of analytics.
+
+## Open dependency
+
+- **`PEXELS_API_KEY`** (free, instant) blocks Phase A footage + Phase B photo bgs. Pixabay key is a drop-in fallback.
+
+## Verification per phase
+
+- **A:** render one b-roll reel locally → play → confirm moving footage + middle captions + voice + music; publish one to IG.
+- **B:** render 3 carousels → confirm different palette/layout/bg.
+- **C:** dry-run a day → queue holds 2 reels + 1 carousel; quality gate rejects a weak script.
+
+## Status log
+
+- 2026-06-30: Plan written. Vimeo clip pipeline verified end-to-end (IG `18323571790287982`); `publish_reel` now retries with cache-buster on Meta 2207077. Awaiting `PEXELS_API_KEY` to start Phase A.
+
+---
+
+# 🗄 ARCHIVED: Original build plan ($0/month free stack)
 
 ## Context
 
