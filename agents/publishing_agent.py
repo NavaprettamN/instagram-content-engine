@@ -115,6 +115,16 @@ class PublishingAgent:
 
     def publish_reel(self, video_url, caption, cover_url=None):
         self._require_meta()
+        # Meta caches a FAILED video fetch keyed to the URL (error_subcode 2207077,
+        # "Failed to get Fwdproxy session"), so same-URL retries loop-fail. On that
+        # error, retry once with a cache-buster query param -> forces a fresh fetch.
+        result = self._publish_reel_once(video_url, caption, cover_url)
+        if isinstance(result, dict) and result.get("error", {}).get("error_subcode") == 2207077:
+            sep = "&" if "?" in video_url else "?"
+            result = self._publish_reel_once(f"{video_url}{sep}cb={int(time.time())}", caption, cover_url)
+        return result
+
+    def _publish_reel_once(self, video_url, caption, cover_url=None):
         data = {
             "media_type": "REELS",
             "video_url": video_url,
@@ -125,6 +135,8 @@ class PublishingAgent:
             data["cover_url"] = cover_url
 
         resp = requests.post(f"{self.base_url}/{self.ig_user_id}/media", data=data).json()
+        if "id" not in resp:
+            return resp  # container creation itself failed
         container_id = resp["id"]
 
         for _ in range(30):
@@ -132,8 +144,12 @@ class PublishingAgent:
                 f"{self.base_url}/{container_id}",
                 params={"fields": "status_code", "access_token": self.access_token},
             ).json()
-            if status.get("status_code") == "FINISHED":
+            code = status.get("status_code")
+            if code == "FINISHED":
                 break
+            if code == "ERROR":
+                # surface as a 2207077-shaped error so publish_reel triggers its retry
+                return {"error": {"error_subcode": 2207077, "message": "container ERROR (video fetch failed)"}}
             time.sleep(10)
 
         result = requests.post(
