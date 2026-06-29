@@ -16,7 +16,7 @@ Synced from Notion "Let's Ship" → Tasks database (linked to Instagram Content 
 
 ### 🔄 In progress / needs attention
 - **Gemini free-tier quota** is the current bottleneck — heavy days hit the daily 429 cap, which skips script/idea generation. **Recommended: enable billing on the Gemini key** (a few $/mo) to remove it.
-- **YouTube clipper** — works but cookies expire (~weeks); now *optional* since voice reels are primary. PO-token provider (cookie-free automation) was chosen but **not built** — deferred.
+- **Clips** — YouTube is blocked from CI (datacenter-IP bot block; cookies expire in ~a day; PO-token didn't beat it). **Switched to Vimeo CC** (cookie-free, CI-friendly): daily clip.yml, safety+relevance LLM vetting (rejects promos/NSFW), dedup, English captions. Works automated & $0, but Vimeo's niche pool is thin → clips are occasional (skips when nothing good). Voice reels remain the reliable reel base; publish prefers reels. For top-tier tutorial content, YouTube-from-residential-IP (self-hosted runner/proxy) stays the fallback.
 
 ### ⬜ Pending (audience-gated — low value until followers grow)
 - #11 Media kit, #12 Sponsored slots (need reach to matter).
