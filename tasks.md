@@ -2,11 +2,33 @@
 
 Synced from Notion "Let's Ship" → Tasks database (linked to Instagram Content Agent project).
 
+---
+
+## 📊 Current Status (updated 2026-06-29)
+
+### ✅ Done & running
+- **Full content engine** — research (trends) → auto-approve → generate → publish, all on GitHub Actions cron.
+- **Original AI voice reels** (NEW primary format) — hook → Gemini script → free edge-tts voiceover → synced middle captions → branded bg + music. Replaced low-quality YouTube reposts. **2 reels : 1 carousel** mix.
+- **Posting FIXED** — best-time exact-hour gate was silently skipping every post (GitHub cron runs 60–90 min late). Reworked to **quota + spacing** gate; publishing resumed (12-post backlog now clearing ~3/day).
+- **Monetization funnel live** — bio page → free cheat-sheet (Kit email capture) → Sovrn affiliate tools page → Gumroad product. All deployed on GitHub Pages.
+- Comment auto-reply, Stories auto-promo, rich analytics dashboard, performance feedback loop, hashtag rotation.
+- **FLOW.md** maintenance guide.
+
+### 🔄 In progress / needs attention
+- **Gemini free-tier quota** is the current bottleneck — heavy days hit the daily 429 cap, which skips script/idea generation. **Recommended: enable billing on the Gemini key** (a few $/mo) to remove it.
+- **YouTube clipper** — works but cookies expire (~weeks); now *optional* since voice reels are primary. PO-token provider (cookie-free automation) was chosen but **not built** — deferred.
+
+### ⬜ Pending (audience-gated — low value until followers grow)
+- #11 Media kit, #12 Sponsored slots (need reach to matter).
+- #13–15 Scale (multi-account, cross-platform, SaaS).
+
+---
+
 ## Phase 1: Growth Engine (Jul–Aug 2026)
 
 | # | Task | Priority | Dates | Status |
 |---|---|---|---|---|
-| 1 | **Best-Time-to-Post optimizer** — AnalyticsAgent analyzes engagement by hour/day → auto-tunes publish.yml cron slots | 🔴 High | Jul 1–7 | ✅ |
+| 1 | **Best-Time-to-Post optimizer** — analytics computes best hours + follower trend. ⚠️ REWORKED: exact-hour publish gating broke posting (GitHub cron delay) → now gates on quota + ~6h spacing instead | 🔴 High | Jul 1–7 | ✅ |
 | 2 | **Comment auto-reply agent** — Auto-reply to comments within 1hr using Gemini contextual replies | 🔴 High | Jul 7–14 | ✅ |
 | 3 | **Stories engagement bot** — Auto-repost latest post to Stories daily (drives profile visits). Note: API can't add poll/quiz/link stickers — plain image only | 🟡 Medium | Jul 14–21 | ✅ |
 | 4 | **Link-in-bio manager** — Single bio link funnel: latest post → affiliate offers → lead magnet → product | 🔴 High | Jul 21–28 | ✅ |
@@ -59,6 +81,12 @@ Synced from Notion "Let's Ship" → Tasks database (linked to Instagram Content 
 - Performance feedback loop (top posts → ResearchAgent makes more of what works)
 - Affiliate engine #8 COMPLETE (Sovrn Commerce auto-affiliation live on tools.html + bio auto-link + FTC disclosure + content nudge)
 - Lead magnet #10 COMPLETE (cheat-sheet guide + Kit email-capture form, deployed to Pages, linked from bio)
+- Digital product #9 COMPLETE (AI Productivity Pack PDF on Gumroad, wired into bio)
+- **Original AI voice reels** — edge-tts voiceover + synced middle captions + branded bg (replaced YouTube-repost reels); 2:1 reel/carousel mix
+- Clip subtitles fixed — Whisper translate (always English) + stylish middle ASS captions (shared agents/_captions.py)
+- Clipper dry-run preview mode (render without posting)
+- **Publish gate fix** — quota+spacing instead of brittle exact-hour (cron-delay-proof); restored posting
+- FLOW.md operating/maintenance guide; node_modules gitignored
 
 **✅ PHASE 1 COMPLETE** — growth engine done. Next: Phase 2 monetization (#8 affiliate is the first revenue stream).
 - OpenCode MCP setup (GitHub + Notion MCP)
