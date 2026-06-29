@@ -23,11 +23,52 @@ SEARCH = "https://www.googleapis.com/youtube/v3/search"
 class ClipAgent:
     def __init__(self, config):
         self.yt_key = os.environ.get("YOUTUBE_API_KEY")
+        self.vimeo_token = os.environ.get("VIMEO_TOKEN")
+        self.source = config.get("clip_source", "vimeo")  # vimeo (CI-friendly) or youtube
         self.keywords = config.get("keywords", [])
         self.niche = config.get("niche", "")
         self.output_dir = config.get("output_dir", "./generated_content")
 
     # ── source ──────────────────────────────────────────────────────
+    def find_video(self):
+        """Dispatch to the configured source. Vimeo is cookie-free + CI-friendly;
+        YouTube is bigger but bot-blocks datacenter IPs (needs residential/proxy)."""
+        return self.find_vimeo_cc() if self.source == "vimeo" else self.find_cc_video()
+
+    def find_vimeo_cc(self):
+        """A Creative-Commons Vimeo video (1-30 min) not clipped before, or None."""
+        if not self.vimeo_token:
+            print("ClipAgent: VIMEO_TOKEN not set")
+            return None
+        import json
+        import random
+        from agents._db import get_config
+        clipped = set(json.loads(get_config("clipped_videos") or "[]"))
+        kws = list(self.keywords) or ["AI tools"]
+        random.shuffle(kws)
+        candidates = []
+        for kw in kws[:4]:
+            try:
+                r = requests.get(
+                    "https://api.vimeo.com/videos",
+                    headers={"Authorization": f"bearer {self.vimeo_token}"},
+                    params={"query": kw, "filter": "CC", "per_page": 12,
+                            "sort": "relevant", "fields": "uri,name,link,duration,user.name"},
+                    timeout=15,
+                )
+                for v in r.json().get("data", []):
+                    vid = v["uri"].split("/")[-1]
+                    dur = v.get("duration", 0)
+                    if vid in clipped or dur < 60 or dur > 1800:
+                        continue
+                    if any(c["id"] == vid for c in candidates):
+                        continue
+                    candidates.append({"id": vid, "title": v.get("name", ""),
+                                       "channel": v.get("user", {}).get("name", "Vimeo"),
+                                       "url": v.get("link")})
+            except Exception as e:
+                print(f"ClipAgent vimeo '{kw}': {e}")
+        return random.choice(candidates[:8]) if candidates else None
     def find_cc_video(self):
         """A Creative-Commons niche video not clipped before. Dedups, varies the
         keyword + pick (so it's not the same video every time), and prefers
@@ -74,6 +115,14 @@ class ClipAgent:
         cmd = [sys.executable, "-m", "yt_dlp",
                "-f", "best[ext=mp4][height<=720]/best[height<=720]/best",
                "--no-playlist"]
+        if "vimeo.com" in url:
+            # Vimeo doesn't bot-block datacenter IPs — plain download, no auth tricks.
+            cmd += ["-o", out, url]
+            try:
+                subprocess.run(cmd, check=True, capture_output=True, text=True)
+            except subprocess.CalledProcessError as e:
+                raise RuntimeError(f"yt-dlp (vimeo) failed:\n{e.stderr[-1200:]}") from e
+            return out
         cookies = os.environ.get("YT_COOKIES_FILE")
         # Priority: PO-token provider (cookie-free, no maintenance) > cookies > android.
         # YT_POT means the bgutil provider is running — yt-dlp's plugin auto-fetches
@@ -206,7 +255,7 @@ class ClipAgent:
     # ── orchestration ───────────────────────────────────────────────
     def run(self):
         """Find -> download -> transcribe -> pick -> clip. Returns dict or None."""
-        vid = self.find_cc_video()
+        vid = self.find_video()
         if not vid:
             print("ClipAgent: no CC video found")
             return None
@@ -235,6 +284,6 @@ if __name__ == "__main__":
     # source step is testable without the heavy deps; full run needs yt-dlp + whisper
     import yaml
     config = yaml.safe_load(open("config.yaml"))
-    vid = ClipAgent(config).find_cc_video()
+    vid = ClipAgent(config).find_video()
     assert vid is None or {"id", "title", "channel", "url"} <= vid.keys(), vid
     print("clip_agent self-check OK ->", vid["title"] if vid else "no key/result")

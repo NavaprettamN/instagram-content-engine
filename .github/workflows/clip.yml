@@ -1,15 +1,10 @@
-name: Clip Agent — CC YouTube → Reel (weekly)
+name: Clip Agent — CC video → Reel
 
-# Heaviest workflow: downloads a Creative-Commons video, transcribes with Whisper
-# (CPU), and reframes/captions a segment with ffmpeg. Runs weekly to respect
-# Actions minutes + Whisper CPU cost. apt ffmpeg ensures libass (caption burn-in).
+# Clips a Creative-Commons video (Vimeo by default — cookie-free + CI-friendly)
+# into a captioned vertical reel and QUEUES it (publish.yml posts it). Dispatch-
+# only until verified working; then add a daily `schedule` to make clips primary.
 
-# Manual-only: YouTube bot-blocks downloads from GitHub's datacenter IPs, so the
-# clipper is meant to run locally (residential IP) via `python -m scripts.clip_publish`.
-# This dispatch entry is kept for when a PO-token/proxy setup is added.
 on:
-  # Daily schedule disabled: YouTube blocks CI's datacenter IP. Re-enable once
-  # clips run from a residential IP (self-hosted runner) or a proxy/Vimeo source.
   workflow_dispatch:
     inputs:
       dry_run:
@@ -31,39 +26,16 @@ jobs:
       - name: Install ffmpeg (with libass for caption burn-in)
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      # yt-dlp needs a JS runtime to solve YouTube's "n" signature challenge
-      # (otherwise only image formats are returned). yt-dlp auto-uses deno on PATH.
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
+      - run: pip install -r requirements.txt
 
-      - run: pip install -r requirements.txt bgutil-ytdlp-pot-provider
-
-      # Cookie-free YouTube auth: the bgutil provider mints PO tokens on demand,
-      # so we don't depend on a YOUTUBE_COOKIES secret that expires in ~a day.
-      - name: Start PO-token provider
-        run: |
-          docker run --name bgutil-provider -d -p 4416:4416 brainicism/bgutil-ytdlp-pot-provider
-          sleep 6
-
-      - name: Clip a CC video and publish as a reel
+      - name: Clip a CC video and queue it
         env:
           GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
+          VIMEO_TOKEN:       ${{ secrets.VIMEO_TOKEN }}
           YOUTUBE_API_KEY:   ${{ secrets.YOUTUBE_API_KEY }}
-          YOUTUBE_COOKIES:   ${{ secrets.YOUTUBE_COOKIES }}
-          YT_POT:            "1"
           META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
           INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
           SUPABASE_URL:      ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY:      ${{ secrets.SUPABASE_KEY }}
           CLIP_DRY_RUN:      ${{ inputs.dry_run && '1' || '' }}
-        run: |
-          # PO-token provider (YT_POT=1) is primary; cookies are a fallback only.
-          if [ -n "$YOUTUBE_COOKIES" ]; then
-            printf '%s\n' "$YOUTUBE_COOKIES" > /tmp/yt_cookies.txt
-            export YT_COOKIES_FILE=/tmp/yt_cookies.txt
-            echo "Using YouTube cookies."
-          else
-            echo "No YOUTUBE_COOKIES secret — download will likely be bot-blocked."
-          fi
-          python -m scripts.clip_publish
+        run: python -m scripts.clip_publish
