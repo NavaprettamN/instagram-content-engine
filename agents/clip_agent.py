@@ -35,40 +35,65 @@ class ClipAgent:
         YouTube is bigger but bot-blocks datacenter IPs (needs residential/proxy)."""
         return self.find_vimeo_cc() if self.source == "vimeo" else self.find_cc_video()
 
+    # cheap first-pass safety: never clip anything whose title/description hits these
+    BLOCKLIST = ("porn", "nsfw", "sex", "nude", "naked", "xxx", "erotic", "onlyfans",
+                 "gambling", "casino", "crypto pump", "music video", "short film")
+
     def find_vimeo_cc(self):
-        """A Creative-Commons Vimeo video (1-30 min) not clipped before, or None."""
+        """A safe, on-topic Creative-Commons Vimeo video not clipped before, or None.
+        Vets with a blocklist + an LLM relevance/safety check — never auto-clip junk."""
         if not self.vimeo_token:
             print("ClipAgent: VIMEO_TOKEN not set")
             return None
         import json
-        import random
         from agents._db import get_config
         clipped = set(json.loads(get_config("clipped_videos") or "[]"))
         kws = list(self.keywords) or ["AI tools"]
-        random.shuffle(kws)
         candidates = []
-        for kw in kws[:4]:
+        for kw in kws[:5]:
             try:
                 r = requests.get(
                     "https://api.vimeo.com/videos",
                     headers={"Authorization": f"bearer {self.vimeo_token}"},
-                    params={"query": kw, "filter": "CC", "per_page": 12,
-                            "sort": "relevant", "fields": "uri,name,link,duration,user.name"},
+                    params={"query": kw, "filter": "CC", "per_page": 12, "sort": "relevant",
+                            "fields": "uri,name,link,duration,description,user.name"},
                     timeout=15,
                 )
                 for v in r.json().get("data", []):
                     vid = v["uri"].split("/")[-1]
                     dur = v.get("duration", 0)
-                    if vid in clipped or dur < 60 or dur > 1800:
-                        continue
-                    if any(c["id"] == vid for c in candidates):
+                    blob = f"{v.get('name','')} {v.get('description','') or ''}".lower()
+                    if (vid in clipped or dur < 60 or dur > 1800
+                            or any(c["id"] == vid for c in candidates)
+                            or any(b in blob for b in self.BLOCKLIST)):
                         continue
                     candidates.append({"id": vid, "title": v.get("name", ""),
                                        "channel": v.get("user", {}).get("name", "Vimeo"),
-                                       "url": v.get("link")})
+                                       "url": v.get("link"),
+                                       "desc": (v.get("description") or "")[:100]})
             except Exception as e:
                 print(f"ClipAgent vimeo '{kw}': {e}")
-        return random.choice(candidates[:8]) if candidates else None
+        return self._vet(candidates)
+
+    def _vet(self, candidates):
+        """LLM picks the single best on-topic, educational, SFW video — or None."""
+        if not candidates:
+            return None
+        listing = "\n".join(f"{i}: {c['title']} — {c['desc']}" for i, c in enumerate(candidates))
+        try:
+            pick = generate_text(
+                f"From these Creative-Commons videos, pick the ONE best to clip into a short "
+                f"Instagram reel about {self.niche}. It MUST be: on-topic, an educational/explainer "
+                f"or talking-style video (NOT an art film, music video, pure stock/motion-graphics, "
+                f"or hours-long webinar), and strictly safe-for-work. Reply with ONLY the number, "
+                f"or NONE if nothing qualifies.\n\n{listing}",
+                temperature=0,
+            ).strip()
+            idx = int("".join(ch for ch in pick if ch.isdigit()))
+            return candidates[idx] if 0 <= idx < len(candidates) and "NONE" not in pick.upper() else None
+        except Exception as e:
+            print(f"ClipAgent vet: {e}")
+            return None
     def find_cc_video(self):
         """A Creative-Commons niche video not clipped before. Dedups, varies the
         keyword + pick (so it's not the same video every time), and prefers
