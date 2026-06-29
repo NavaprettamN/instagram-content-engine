@@ -302,7 +302,8 @@ class ClipAgent:
         clipped = json.loads(get_config("clipped_videos") or "[]")
         clipped.append(vid["id"])
         set_config("clipped_videos", json.dumps(clipped[-200:]))
-        credit = f"\n\n🎬 Clip from \"{vid['title']}\" by {vid['channel']} (CC BY, via YouTube)"
+        src_name = "Vimeo" if self.source == "vimeo" else "YouTube"
+        credit = f"\n\n🎬 Clip from \"{vid['title']}\" by {vid['channel']} (CC BY, via {src_name})"
         return {"path": clip, "hook": seg["hook"],
                 "caption": (seg["caption"] + credit).strip()}
 
