@@ -83,10 +83,11 @@ class ClipAgent:
         try:
             pick = generate_text(
                 f"From these Creative-Commons videos, pick the ONE best to clip into a short "
-                f"Instagram reel about {self.niche}. It MUST be: on-topic, an educational/explainer "
-                f"or talking-style video (NOT an art film, music video, pure stock/motion-graphics, "
-                f"or hours-long webinar), and strictly safe-for-work. Reply with ONLY the number, "
-                f"or NONE if nothing qualifies.\n\n{listing}",
+                f"Instagram reel about {self.niche}. It MUST be a real person TEACHING, EXPLAINING, "
+                f"or DEMONSTRATING something concretely useful — a tutorial/tips/how-to. "
+                f"REJECT: brand promos, product trailers, marketing montages, stock-footage reels, "
+                f"art films, music videos, hours-long webinars, anything NSFW. Be strict — reply NONE "
+                f"if nothing is a genuine value-packed explainer. Reply with ONLY the number or NONE.\n\n{listing}",
                 temperature=0,
             ).strip()
             idx = int("".join(ch for ch in pick if ch.isdigit()))
@@ -199,8 +200,9 @@ class ClipAgent:
 
         seg = generate_text(
             f'Video "{title}" about {self.niche}. Each line below starts with its '
-            f'timestamp in seconds. Pick the single most compelling 20-40 second '
-            f'segment to clip as an Instagram reel. Return JSON: '
+            f'timestamp in seconds. Pick the single most VALUABLE 20-40 second segment — '
+            f'one concrete tip, insight, or how-to that stands alone. AVOID intros, '
+            f'outros, branding, sponsor reads, and promotional taglines. Return JSON: '
             f'{{"start": <sec>, "end": <sec>, "hook": "<=8 words", "caption": "reel caption with a save/share CTA"}}.\n\n'
             f'{transcript}',
             system="Short-form video editor. Return only valid JSON.",

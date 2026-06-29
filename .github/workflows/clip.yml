@@ -5,6 +5,9 @@ name: Clip Agent — CC video → Reel
 # only until verified working; then add a daily `schedule` to make clips primary.
 
 on:
+  schedule:
+    - cron: "0 6 * * *"   # daily — Vimeo is cookie-free, so this runs unattended.
+                           # Queues a clip when a good safe video is found, else skips.
   workflow_dispatch:
     inputs:
       dry_run:
