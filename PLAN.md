@@ -86,7 +86,10 @@ Keep the original-voiceover format (reliable, $0, no cookies) but put **real mov
 
 ## Status log
 
-- 2026-06-30: Plan written. Vimeo clip pipeline verified end-to-end (IG `18323571790287982`); `publish_reel` now retries with cache-buster on Meta 2207077. Awaiting `PEXELS_API_KEY` to start Phase A.
+- 2026-06-30: Plan written. Vimeo clip pipeline verified end-to-end (IG `18323571790287982`); `publish_reel` now retries with cache-buster on Meta 2207077.
+- 2026-06-30: **Phase A built** (b-roll voice reels — `broll_agent.py` + `voice_reel.build` + `generate.yml`). Filtergraph validated locally. **Needs `PEXELS_API_KEY` to activate** (falls back to solid bg without it).
+- 2026-06-30: **Phase B built** (carousel variety — 6 rotating palettes, gradient bgs, accent blobs, layout rotation). Live, no key needed. Verified 3 ids render distinct.
+- NEXT: get `PEXELS_API_KEY` → activate Phase A footage; then Phase C (daily 2-reel+1-carousel quota + quality gate).
 
 ---
 
