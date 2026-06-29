@@ -43,8 +43,9 @@ class VoiceReelAgent:
                 words.append({"start": start + i * per, "end": start + (i + 1) * per, "word": " " + w})
         return words
 
-    def build(self, hook, script, out_path, music_path=None):
-        """script -> voiceover + captions over a branded bg + ducked music -> mp4."""
+    def build(self, hook, script, out_path, music_path=None, broll_paths=None):
+        """script -> voiceover + captions over moving b-roll (or branded solid bg
+        if no b-roll) + ducked music -> mp4."""
         base = os.path.splitext(out_path)[0]
         voice_mp3 = base + "_voice.mp3"
         # safety cap: reels must stay short even if the model overshoots
@@ -53,23 +54,54 @@ class VoiceReelAgent:
         dur = (words[-1]["end"] if words else 30.0) + 0.8
         ass = write_ass(words, base + ".ass", title=hook)
 
-        base_in = ["-f", "lavfi", "-i", f"color=c={self.bg}:s=1080x1920:d={dur:.2f}:r=30",
-                   "-i", voice_mp3]
+        broll_paths = broll_paths or []
+        # video inputs first, then voice, then (optional) music — track indices
+        vid_in, n = [], len(broll_paths)
+        for p in broll_paths:
+            vid_in += ["-i", p]
+        if not broll_paths:
+            vid_in = ["-f", "lavfi", "-i", f"color=c={self.bg}:s=1080x1920:d={dur:.2f}:r=30"]
+            n = 1
+        voice_idx = n
+        base_in = [*vid_in, "-i", voice_mp3]
         if music_path:
             base_in += ["-stream_loop", "-1", "-i", music_path]
-            afilter = "[2:a]volume=0.16[m];[1:a][m]amix=inputs=2:duration=first[a]"
+            afilter = f"[{voice_idx+1}:a]volume=0.16[m];[{voice_idx}:a][m]amix=inputs=2:duration=first[a]"
         else:
-            afilter = "[1:a]anull[a]"
+            afilter = f"[{voice_idx}:a]anull[a]"
+
+        # build the moving background from b-roll: each clip cropped to 1080x1920,
+        # trimmed to its slice of the voice duration, concatenated, last frame
+        # cloned to cover any shortfall, then darkened for caption legibility.
+        if broll_paths:
+            seg = dur / n + 1.0
+            parts = []
+            for i in range(n):
+                parts.append(
+                    f"[{i}:v]scale=1080:1920:force_original_aspect_ratio=increase,"
+                    f"crop=1080:1920,setsar=1,trim=duration={seg:.2f},"
+                    f"setpts=PTS-STARTPTS[v{i}]")
+            cat = "".join(f"[v{i}]" for i in range(n))
+            parts.append(f"{cat}concat=n={n}:v=1:a=0[cat]")
+            bg_chain = ("[cat]tpad=stop_mode=clone:stop_duration=6,"
+                        f"trim=duration={dur:.2f},setpts=PTS-STARTPTS,"
+                        "drawbox=x=0:y=0:w=iw:h=ih:color=black@0.4:t=fill")
+            pre = ";".join(parts) + ";"
+        else:
+            bg_chain = "[0:v]"
+            pre = ""
+
         # try with captions; fall back to no-captions if ffmpeg lacks libass
         last = None
-        for vfilter in (f"[0:v]ass={ass},format=yuv420p[v]", "[0:v]format=yuv420p[v]"):
+        for cap in (f",ass={ass},format=yuv420p[v]", ",format=yuv420p[v]"):
+            vfilter = f"{pre}{bg_chain}{cap}"
             cmd = ["ffmpeg", "-y", *base_in,
                    "-filter_complex", f"{vfilter};{afilter}", "-map", "[v]", "-map", "[a]",
                    "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                    "-c:a", "aac", "-b:a", "128k", "-shortest", "-movflags", "+faststart", out_path]
             try:
                 subprocess.run(cmd, check=True, capture_output=True, text=True)
-                if "ass=" not in vfilter:
+                if "ass=" not in cap:
                     print("VoiceReelAgent: captions skipped (ffmpeg has no libass)")
                 return out_path
             except subprocess.CalledProcessError as e:

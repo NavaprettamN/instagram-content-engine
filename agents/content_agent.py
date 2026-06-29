@@ -82,6 +82,7 @@ Return JSON:
 {{
   "hook": "3-6 word on-screen title — punchy, scroll-stopping",
   "script": "The spoken narration as ONE flowing voiceover. HARD LIMIT 80 words (~30 seconds) — count them. First 3 seconds MUST be a pattern-interrupt hook. Specific, valuable, energetic, very short sentences. End with a verbal 'follow for more' CTA. NO emojis, NO hashtags, NO stage directions, NO markdown, NO quotes — only the words spoken aloud.",
+  "b_roll_terms": ["4-6 CONCRETE stock-footage search phrases, in script order, that visually match the narration beats. Use filmable nouns + action, NOT abstract concepts. Good: 'person typing on laptop', 'glowing AI robot face', 'city street timelapse night', 'data charts on screen', 'hands using smartphone'. Bad: 'productivity', 'success', 'innovation'."],
   "caption": "Instagram caption: hook line, brief value, a save/share CTA, a question, and a follow CTA using {self.handle}."
 }}
 Rules: the script must sound natural read aloud; use numbers/specifics over fluff.""",
