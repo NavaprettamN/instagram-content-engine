@@ -4,6 +4,23 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 import textwrap
 
+# Brand-safe palette rotation so consecutive carousels don't look identical.
+# Each: (bg_top, bg_bottom, accent, text, text_secondary). Dark, high-contrast.
+PALETTES = [
+    ("#1a1a2e", "#16213e", "#e94560", "#ffffff", "#cfd3e0"),  # original navy/red
+    ("#0f2027", "#203a43", "#36d1dc", "#ffffff", "#c9e9ee"),  # teal deep
+    ("#2b1055", "#7597de", "#ffd166", "#ffffff", "#e7e0ff"),  # violet/gold
+    ("#231526", "#3a1c4a", "#ff6b9d", "#ffffff", "#f0d9e8"),  # plum/pink
+    ("#13293d", "#006494", "#f9c74f", "#ffffff", "#cfe6f2"),  # ocean/amber
+    ("#1b1b2f", "#162447", "#1f4068", "#ffffff", "#c7cddb"),  # midnight
+]
+
+
+def _hex(c):
+    c = c.lstrip("#")
+    return tuple(int(c[i:i + 2], 16) for i in (0, 2, 4))
+
+
 class DesignAgent:
     def __init__(self, config):
         self.output_dir = config.get("output_dir", "./generated_content")
@@ -37,10 +54,33 @@ class DesignAgent:
         draw.text((img.width - 80 - w, y), counter, font=font, fill=color)
         return img
     
-    def create_slide(self, width=1080, height=1080, bg_color=None):
-        """Create a blank slide with background"""
-        color = bg_color or self.brand_colors["background"]
-        img = Image.new("RGB", (width, height), color)
+    def _gradient(self, top, bottom, width, height):
+        """Vertical two-colour gradient background."""
+        t, b = _hex(top), _hex(bottom)
+        base = Image.new("RGB", (1, height))
+        px = base.load()
+        for y in range(height):
+            f = y / max(height - 1, 1)
+            px[0, y] = tuple(int(t[i] + (b[i] - t[i]) * f) for i in range(3))
+        return base.resize((width, height))
+
+    def create_slide(self, width=1080, height=1080, bg_color=None, palette=None, shapes=True):
+        """Slide background: gradient from the palette + soft accent blobs.
+        Falls back to a flat colour if bg_color is forced (legacy callers)."""
+        if bg_color and not palette:
+            return Image.new("RGB", (width, height), bg_color)
+        p = palette or self.brand_colors
+        top = p.get("background", "#1a1a2e")
+        bottom = p.get("secondary_bg", top)
+        img = self._gradient(top, bottom, width, height)
+        if shapes:
+            # translucent accent circles in the corners for depth/variety
+            overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            d = ImageDraw.Draw(overlay)
+            acc = _hex(p.get("accent", "#e94560"))
+            d.ellipse([-220, -220, 260, 260], fill=acc + (40,))
+            d.ellipse([width - 300, height - 300, width + 220, height + 220], fill=acc + (28,))
+            img = Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
         return img
     
     def add_text(self, img, text, position, font_size=48, 
@@ -68,41 +108,45 @@ class DesignAgent:
         os.makedirs(idea_dir, exist_ok=True)
         total_pages = 2 + len(carousel_content.get("slides", []))  # hook + content + cta
 
+        # rotate palette per post so consecutive carousels differ visually
+        bt, bb, acc, txt, txt2 = PALETTES[idea_id % len(PALETTES)]
+        pal = {"background": bt, "secondary_bg": bb, "accent": acc,
+               "text_primary": txt, "text_secondary": txt2}
+        # rotate hook layout: 0=upper, 1=centred, 2=lower — keyed off the post id
+        layout = idea_id % 3
+        hook_y = (300, 380, 470)[layout]
+
         # Slide 1: Hook slide
-        img = self.create_slide()
+        img = self.create_slide(palette=pal)
+        # accent bar above the hook
+        ImageDraw.Draw(img).rectangle([80, hook_y - 50, 300, hook_y - 45], fill=acc)
         img = self.add_text(
-            img, 
+            img,
             carousel_content["slide_1_hook"],
-            position=(80, 350),
+            position=(80, hook_y),
             font_size=72,
-            color=self.brand_colors["text_primary"]
+            color=txt,
         )
         if carousel_content.get("slide_1_subtext"):
             img = self.add_text(
                 img,
                 carousel_content["slide_1_subtext"],
-                position=(80, 550),
+                position=(80, hook_y + 220),
                 font_size=36,
-                color=self.brand_colors["text_secondary"],
+                color=txt2,
                 font_type="regular"
             )
-        
-        # Add accent line
-        draw = ImageDraw.Draw(img)
-        draw.rectangle([80, 300, 300, 305], 
-                       fill=self.brand_colors["accent"])
-        
+
         img = self.add_footer(img, 1, total_pages)
         path = os.path.join(idea_dir, "slide_01.png")
         img.save(path, quality=95)
         slides.append(path)
-        
+
         # Content slides
         for i, slide_data in enumerate(carousel_content.get("slides", []), 2):
-            img = self.create_slide(
-                bg_color=self.brand_colors["secondary_bg"] if i % 2 == 0 
-                         else self.brand_colors["background"]
-            )
+            # alternate gradient direction (swap top/bottom) for slide-to-slide variety
+            spal = pal if i % 2 == 0 else {**pal, "background": bb, "secondary_bg": bt}
+            img = self.create_slide(palette=spal)
             
             # Slide number
             img = self.add_text(
@@ -118,40 +162,40 @@ class DesignAgent:
                 slide_data["headline"],
                 position=(80, 200),
                 font_size=56,
-                color=self.brand_colors["accent"]
+                color=acc
             )
-            
+
             # Body
             img = self.add_text(
                 img,
                 slide_data["body"],
                 position=(80, 380),
                 font_size=36,
-                color=self.brand_colors["text_secondary"],
+                color=txt2,
                 font_type="regular",
                 max_width=35
             )
-            
+
             img = self.add_footer(img, i, total_pages)
             path = os.path.join(idea_dir, f"slide_{i:02d}.png")
             img.save(path, quality=95)
             slides.append(path)
-        
+
         # CTA slide
-        img = self.create_slide()
+        img = self.create_slide(palette=pal)
         img = self.add_text(
             img,
             carousel_content.get("slide_final_cta", "Follow for more"),
             position=(80, 380),
             font_size=56,
-            color=self.brand_colors["accent"]
+            color=acc
         )
         img = self.add_text(
             img,
             "Save this post  •  Share with a friend  •  Follow",
             position=(80, 600),
             font_size=30,
-            color=self.brand_colors["text_secondary"],
+            color=txt2,
             font_type="regular"
         )
         
