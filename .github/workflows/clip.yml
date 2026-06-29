@@ -8,10 +8,12 @@ name: Clip Agent — CC YouTube → Reel (weekly)
 # clipper is meant to run locally (residential IP) via `python -m scripts.clip_publish`.
 # This dispatch entry is kept for when a PO-token/proxy setup is added.
 on:
+  schedule:
+    - cron: "0 6 * * *"   # daily — clip a CC video into the publish queue (primary reel source)
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Render + host the clip but do NOT post it (preview captions)"
+        description: "Render + host the clip but do NOT queue it (preview captions)"
         type: boolean
         default: true
 

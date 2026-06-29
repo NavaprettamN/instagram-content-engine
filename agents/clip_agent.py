@@ -29,21 +29,40 @@ class ClipAgent:
 
     # ── source ──────────────────────────────────────────────────────
     def find_cc_video(self):
-        """Top Creative-Commons, medium-length niche video, or None."""
+        """A Creative-Commons niche video not clipped before. Dedups, varies the
+        keyword + pick (so it's not the same video every time), and prefers
+        English-ish titles."""
         if not self.yt_key:
             return None
-        for kw in self.keywords[:3]:
-            r = requests.get(SEARCH, params={
-                "key": self.yt_key, "part": "snippet", "q": kw, "type": "video",
-                "videoLicense": "creativeCommon", "videoDuration": "medium",  # 4-20 min
-                "order": "viewCount", "maxResults": 5, "relevanceLanguage": "en",
-            }, timeout=15)
-            for it in r.json().get("items", []):
-                vid = it["id"]["videoId"]
-                return {"id": vid, "title": it["snippet"]["title"],
-                        "channel": it["snippet"]["channelTitle"],
-                        "url": f"https://www.youtube.com/watch?v={vid}"}
-        return None
+        import json
+        import random
+        from agents._db import get_config
+        clipped = set(json.loads(get_config("clipped_videos") or "[]"))
+        keywords = list(self.keywords) or ["AI tools"]
+        random.shuffle(keywords)
+        candidates = []
+        for kw in keywords[:5]:
+            try:
+                r = requests.get(SEARCH, params={
+                    "key": self.yt_key, "part": "snippet", "q": kw, "type": "video",
+                    "videoLicense": "creativeCommon", "videoDuration": "medium",
+                    "order": "viewCount", "maxResults": 10, "relevanceLanguage": "en",
+                }, timeout=15)
+                for it in r.json().get("items", []):
+                    vid = it["id"]["videoId"]
+                    if vid in clipped or any(c["id"] == vid for c in candidates):
+                        continue
+                    t = it["snippet"]["title"]
+                    candidates.append({"id": vid, "title": t,
+                                       "channel": it["snippet"]["channelTitle"],
+                                       "url": f"https://www.youtube.com/watch?v={vid}",
+                                       "_en": sum(ord(c) < 128 for c in t) / max(len(t), 1)})
+            except Exception as e:
+                print(f"ClipAgent search '{kw}': {e}")
+        if not candidates:
+            return None
+        candidates.sort(key=lambda c: c["_en"], reverse=True)  # English-ish titles first
+        return random.choice(candidates[:8])  # variety among the best
 
     def download(self, url, out_base):
         out = f"{out_base}.mp4"
@@ -197,6 +216,12 @@ class ClipAgent:
             return None
         seg = self.pick_segment(words, vid["title"])
         clip = self.make_clip(src, words, seg, f"{base}_reel.mp4")
+        # remember this video so we never clip it again (dedup)
+        import json
+        from agents._db import get_config, set_config
+        clipped = json.loads(get_config("clipped_videos") or "[]")
+        clipped.append(vid["id"])
+        set_config("clipped_videos", json.dumps(clipped[-200:]))
         credit = f"\n\n🎬 Clip from \"{vid['title']}\" by {vid['channel']} (CC BY, via YouTube)"
         return {"path": clip, "hook": seg["hook"],
                 "caption": (seg["caption"] + credit).strip()}

@@ -56,7 +56,9 @@ jobs:
                   print(f'Processing idea {idea[\"id\"]}: {idea[\"hook\"]}')
                   hashtag_sets = ha.generate_hashtag_sets(idea['hook'])  # 3 rotating sets
                   base = f'{config[\"output_dir\"]}/carousel_{idea[\"id\"]}'
-                  as_reel = (idea['id'] % 3) != 0  # 2 of every 3 posts are reels, 1 carousel
+                  # Reels come from real YouTube clips (clip.yml) now; generate makes
+                  # carousels unless generate_reels is explicitly turned on.
+                  as_reel = config.get('generate_reels', False) and (idea['id'] % 3) != 0
                   if as_reel:
                       # ORIGINAL voiceover reel: script -> edge-tts -> synced captions
                       vs = ca.generate_voice_script(idea)

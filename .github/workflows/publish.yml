@@ -64,7 +64,10 @@ jobs:
               print('No designed posts ready to publish.')
               exit(0)
 
-          post = designed[-1]  # oldest first (list is newest-first, take last)
+          # Prefer reels (YouTube clips) — they perform best — then carousels.
+          # designed is newest-first, so [-1] is the oldest of the chosen group.
+          reels = [p for p in designed if p.get('content_type') == 'reel']
+          post = (reels or designed)[-1]
           agent = PublishingAgent(config)
           paths = json.loads(post['image_paths']) if post.get('image_paths') else []
           caption = compose_caption(post, count_ideas('published'))  # rotated hashtag set appended
