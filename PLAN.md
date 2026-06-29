@@ -89,7 +89,8 @@ Keep the original-voiceover format (reliable, $0, no cookies) but put **real mov
 - 2026-06-30: Plan written. Vimeo clip pipeline verified end-to-end (IG `18323571790287982`); `publish_reel` now retries with cache-buster on Meta 2207077.
 - 2026-06-30: **Phase A built** (b-roll voice reels — `broll_agent.py` + `voice_reel.build` + `generate.yml`). Filtergraph validated locally. **Needs `PEXELS_API_KEY` to activate** (falls back to solid bg without it).
 - 2026-06-30: **Phase B built** (carousel variety — 6 rotating palettes, gradient bgs, accent blobs, layout rotation). Live, no key needed. Verified 3 ids render distinct.
-- NEXT: get `PEXELS_API_KEY` → activate Phase A footage; then Phase C (daily 2-reel+1-carousel quota + quality gate).
+- 2026-06-30: **Phase A ACTIVATED** — `PEXELS_API_KEY` set (`.env` + GH secret). CI rendered idea 59 as a real b-roll reel (frustrated-woman-at-laptop footage + title banner + middle captions), **posted live IG `18075312215487097`**. Meta 2207077 fetch flake fixed properly: `publish_reel` now re-hosts under a fresh object name + retries (query-param cache-buster was useless); `voice_reel` forces `fps=30`.
+- NEXT: **Phase C** — daily 2-reel+1-carousel quota + LLM quality gate (reject/regen weak scripts) + asset cache.
 
 ---
 
