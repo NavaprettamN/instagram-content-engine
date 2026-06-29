@@ -37,20 +37,28 @@ jobs:
         with:
           deno-version: v2.x
 
-      - run: pip install -r requirements.txt
+      - run: pip install -r requirements.txt bgutil-ytdlp-pot-provider
+
+      # Cookie-free YouTube auth: the bgutil provider mints PO tokens on demand,
+      # so we don't depend on a YOUTUBE_COOKIES secret that expires in ~a day.
+      - name: Start PO-token provider
+        run: |
+          docker run --name bgutil-provider -d -p 4416:4416 brainicism/bgutil-ytdlp-pot-provider
+          sleep 6
 
       - name: Clip a CC video and publish as a reel
         env:
           GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
           YOUTUBE_API_KEY:   ${{ secrets.YOUTUBE_API_KEY }}
           YOUTUBE_COOKIES:   ${{ secrets.YOUTUBE_COOKIES }}
+          YT_POT:            "1"
           META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
           INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
           SUPABASE_URL:      ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY:      ${{ secrets.SUPABASE_KEY }}
           CLIP_DRY_RUN:      ${{ inputs.dry_run && '1' || '' }}
         run: |
-          # YouTube blocks CI IPs; cookies from a logged-in session get past it.
+          # PO-token provider (YT_POT=1) is primary; cookies are a fallback only.
           if [ -n "$YOUTUBE_COOKIES" ]; then
             printf '%s\n' "$YOUTUBE_COOKIES" > /tmp/yt_cookies.txt
             export YT_COOKIES_FILE=/tmp/yt_cookies.txt

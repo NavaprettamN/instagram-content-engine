@@ -75,9 +75,13 @@ class ClipAgent:
                "-f", "best[ext=mp4][height<=720]/best[height<=720]/best",
                "--no-playlist"]
         cookies = os.environ.get("YT_COOKIES_FILE")
-        if cookies and os.path.exists(cookies):
-            # web client needs to solve YouTube's "n" JS challenge; fetch the EJS
-            # solver script and run it via deno (installed in CI).
+        # Priority: PO-token provider (cookie-free, no maintenance) > cookies > android.
+        # YT_POT means the bgutil provider is running — yt-dlp's plugin auto-fetches
+        # the PO token, so the default web client gets past the bot check. EJS/deno
+        # solves the "n" signature challenge in both web paths.
+        if os.environ.get("YT_POT"):
+            cmd += ["--remote-components", "ejs:github"]
+        elif cookies and os.path.exists(cookies):
             cmd += ["--cookies", cookies, "--remote-components", "ejs:github"]
         else:
             cmd += ["--extractor-args", "youtube:player_client=android"]
