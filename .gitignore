@@ -21,3 +21,12 @@ venv/
 
 # Pages build output
 _site/
+
+# Node / tooling
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Temp / scratch
+*.tmp
+*.log

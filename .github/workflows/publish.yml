@@ -35,21 +35,29 @@ jobs:
 
           config = yaml.safe_load(open('config.yaml'))
 
-          # Adaptive gate: post only in best hours (analytics) or fallback slots,
-          # and never exceed posts_per_day. Cron runs every 2h, so hours are even.
-          fallback = [int(t.split(':')[0]) for t in config.get('posting_times', ['08:00','14:00','20:00'])]
-          stored = get_config('best_hours')
-          target_hours = json.loads(stored) if stored else fallback
+          # Gate: post up to posts_per_day/day, spaced out, whenever a run fires.
+          # Exact-hour gating was brittle — GitHub cron is delayed 60-90 min, so
+          # runs almost never land on the target hour and everything got skipped.
+          # Quota + spacing is resilient to that and still spreads posts out.
           now = datetime.now(timezone.utc)
-          if now.hour not in target_hours:
-              print(f'Hour {now.hour} UTC not a posting window {target_hours}; skipping.')
-              exit(0)
+          ppd = config.get('posts_per_day', 3)
+          min_gap_h = max(2, round(18 / ppd))  # ~6h apart for 3/day
+          published = get_ideas(status='published')
           today = now.date().isoformat()
-          posted_today = sum(1 for p in get_ideas(status='published')
-                             if (p.get('published_at') or '').startswith(today))
-          if posted_today >= config.get('posts_per_day', 3):
-              print(f'Daily quota reached ({posted_today}); skipping.')
+          posted_today = sum(1 for p in published if (p.get('published_at') or '').startswith(today))
+          if posted_today >= ppd:
+              print(f'Daily quota reached ({posted_today}/{ppd}); skipping.')
               exit(0)
+          times = sorted(p['published_at'] for p in published if p.get('published_at'))
+          if times:
+              raw = times[-1].replace('Z', '+00:00')
+              last = datetime.fromisoformat(raw)
+              if last.tzinfo is None:
+                  last = last.replace(tzinfo=timezone.utc)
+              gap = (now - last).total_seconds() / 3600
+              if gap < min_gap_h:
+                  print(f'Only {gap:.1f}h since last post (< {min_gap_h}h); skipping.')
+                  exit(0)
 
           designed = get_ideas(status='designed')
           if not designed:
