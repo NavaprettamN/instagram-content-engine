@@ -83,8 +83,10 @@ class VoiceReelAgent:
                     f"setpts=PTS-STARTPTS[v{i}]")
             cat = "".join(f"[v{i}]" for i in range(n))
             parts.append(f"{cat}concat=n={n}:v=1:a=0[cat]")
+            # fps=30 forces constant frame rate — concat of mixed-fps stock clips
+            # is otherwise VFR, which Instagram rejects with a container ERROR.
             bg_chain = ("[cat]tpad=stop_mode=clone:stop_duration=6,"
-                        f"trim=duration={dur:.2f},setpts=PTS-STARTPTS,"
+                        f"trim=duration={dur:.2f},setpts=PTS-STARTPTS,fps=30,"
                         "drawbox=x=0:y=0:w=iw:h=ih:color=black@0.4:t=fill")
             pre = ";".join(parts) + ";"
         else:

@@ -115,14 +115,30 @@ class PublishingAgent:
 
     def publish_reel(self, video_url, caption, cover_url=None):
         self._require_meta()
-        # Meta caches a FAILED video fetch keyed to the URL (error_subcode 2207077,
-        # "Failed to get Fwdproxy session"), so same-URL retries loop-fail. On that
-        # error, retry once with a cache-buster query param -> forces a fresh fetch.
+        # Meta caches a FAILED video fetch keyed to the URL (error_subcode 2207077),
+        # so same-URL retries loop-fail. The reliable fix is a *fresh object name*:
+        # re-download the MP4 and re-host it, then retry against the new URL.
         result = self._publish_reel_once(video_url, caption, cover_url)
         if isinstance(result, dict) and result.get("error", {}).get("error_subcode") == 2207077:
-            sep = "&" if "?" in video_url else "?"
-            result = self._publish_reel_once(f"{video_url}{sep}cb={int(time.time())}", caption, cover_url)
+            fresh = self._rehost(video_url)
+            if fresh:
+                result = self._publish_reel_once(fresh, caption, cover_url)
         return result
+
+    def _rehost(self, video_url):
+        """Download a hosted MP4 and re-upload it under a new name -> fresh URL.
+        Returns None on any failure (caller keeps the original error)."""
+        try:
+            import tempfile
+            r = requests.get(video_url, timeout=60)
+            r.raise_for_status()
+            with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as f:
+                f.write(r.content)
+                tmp = f.name
+            return self.upload_video_to_hosting(tmp)
+        except Exception as e:
+            print(f"publish_reel: re-host failed ({e})")
+            return None
 
     def _publish_reel_once(self, video_url, caption, cover_url=None):
         data = {
