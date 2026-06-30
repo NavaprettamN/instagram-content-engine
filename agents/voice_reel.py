@@ -16,8 +16,19 @@ class VoiceReelAgent:
     def __init__(self, config):
         c = config.get("brand_colors", {})
         self.bg = c.get("background", "#1a1a2e").replace("#", "0x")
+        self.accent = c.get("accent", "#e94560").replace("#", "0x")
         self.voice = config.get("reel_voice", "en-US-AriaNeural")
         self.rate = config.get("reel_voice_rate", "+12%")  # energetic + shorter
+
+    def _motion_overlays(self, dur):
+        """ffmpeg motion-graphic elements (reliable, no deps): a title underline
+        that wipes in over the first 0.5s, and a progress bar that fills over the
+        whole reel. Commas inside expressions are escaped for the filtergraph."""
+        ul = (f"drawbox=x='540-160*min(t/0.5\\,1)':y=235:w='320*min(t/0.5\\,1)':"
+              f"h=9:color={self.accent}@0.95:t=fill")
+        bar = (f"drawbox=x=0:y=ih-14:w='iw*min(t/{dur:.2f}\\,1)':h=14:"
+               f"color={self.accent}@0.85:t=fill")
+        return f",{ul},{bar}"
 
     def _tts(self, text, mp3_path):
         """Synthesize voiceover; return word cues from sentence-level timings."""
@@ -92,6 +103,7 @@ class VoiceReelAgent:
         else:
             bg_chain = "[0:v]"
             pre = ""
+        bg_chain += self._motion_overlays(dur)  # title underline wipe + progress bar
 
         # try with captions; fall back to no-captions if ffmpeg lacks libass
         last = None

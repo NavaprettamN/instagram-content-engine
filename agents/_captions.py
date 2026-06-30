@@ -25,13 +25,23 @@ def _t(sec):
     return f"{int(h):d}:{int(m):02d}:{s:05.2f}"
 
 
-def write_ass(words, ass_path, offset=0.0, words_per_cue=3, title=None):
+# Kinetic motion (libass override tags, no new deps):
+#  - captions "pop" in: fade + scale 70%->100% over the first ~150ms.
+#  - title slides down a touch and fades in.
+_POP = r"{\fad(70,50)\fscx72\fscy72\t(0,150,\fscx100\fscy100)}"
+_TITLE_IN = r"{\fad(260,0)}"
+
+
+def write_ass(words, ass_path, offset=0.0, words_per_cue=3, title=None, animate=True):
     """words: [{start,end,word}] (seconds). offset is subtracted (clip rebasing).
-    title: optional hook shown as a top banner for the whole clip."""
+    title: optional hook shown as a top banner for the whole clip.
+    animate: prepend kinetic pop/slide tags (set False for a static fallback)."""
     lines = []
+    pop = _POP if animate else ""
     if title:
         end = (words[-1]["end"] - offset) if words else 30.0
-        lines.append(f"Dialogue: 0,{_t(0)},{_t(end)},Title,,0,0,0,,{title.replace(chr(10),' ').strip()}")
+        tin = _TITLE_IN if animate else ""
+        lines.append(f"Dialogue: 0,{_t(0)},{_t(end)},Title,,0,0,0,,{tin}{title.replace(chr(10),' ').strip()}")
     i = 0
     while i < len(words):
         g = words[i:i + words_per_cue]
@@ -39,7 +49,7 @@ def write_ass(words, ass_path, offset=0.0, words_per_cue=3, title=None):
         b = max(a + 0.4, g[-1]["end"] - offset)
         text = "".join(w["word"] for w in g).strip().replace("\n", " ").upper()
         if text:
-            lines.append(f"Dialogue: 0,{_t(a)},{_t(b)},Default,,0,0,0,,{text}")
+            lines.append(f"Dialogue: 0,{_t(a)},{_t(b)},Default,,0,0,0,,{pop}{text}")
         i += words_per_cue
     with open(ass_path, "w") as f:
         f.write(_HEADER + "\n".join(lines) + "\n")
