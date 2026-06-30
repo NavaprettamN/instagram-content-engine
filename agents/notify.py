@@ -18,7 +18,10 @@ def send(title, message, url=None):
     try:
         topic = os.environ.get("NTFY_TOPIC")
         if topic:
-            headers = {"Title": title}
+            # ntfy headers must be ASCII/latin-1 — strip emoji etc. from the title
+            # (body keeps full UTF-8). Hooks can contain emoji, so this is required.
+            safe_title = (title or "New post").encode("ascii", "ignore").decode() or "New post"
+            headers = {"Title": safe_title}
             if url:
                 headers["Click"] = url  # tapping the notification opens the post
             requests.post(f"https://ntfy.sh/{topic}", data=message.encode("utf-8"),
