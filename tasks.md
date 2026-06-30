@@ -4,22 +4,33 @@ Synced from Notion "Let's Ship" → Tasks database (linked to Instagram Content 
 
 ---
 
-## 📊 Current Status (updated 2026-06-29)
+## 📊 Current Status (updated 2026-06-30)
+
+> **Goal: make money** — grow reach/followers → monetize. See `PLAN.md` for the
+> active content-quality + "proper machine" plan. Update this file at the end of
+> every work session (mandated in CLAUDE.md).
 
 ### ✅ Done & running
-- **Full content engine** — research (trends) → auto-approve → generate → publish, all on GitHub Actions cron.
-- **Original AI voice reels** (NEW primary format) — hook → Gemini script → free edge-tts voiceover → synced middle captions → branded bg + music. Replaced low-quality YouTube reposts. **2 reels : 1 carousel** mix.
-- **Posting FIXED** — best-time exact-hour gate was silently skipping every post (GitHub cron runs 60–90 min late). Reworked to **quota + spacing** gate; publishing resumed (12-post backlog now clearing ~3/day).
-- **Monetization funnel live** — bio page → free cheat-sheet (Kit email capture) → Sovrn affiliate tools page → Gumroad product. All deployed on GitHub Pages.
-- Comment auto-reply, Stories auto-promo, rich analytics dashboard, performance feedback loop, hashtag rotation.
-- **FLOW.md** maintenance guide.
+- **Full content engine** — research (trends) → auto-approve → quality-gate → generate → publish, all on GitHub Actions cron.
+- **B-roll voice reels (primary format)** — hook → script → free edge-tts voiceover → **real moving Pexels stock footage** behind **kinetic word-pop captions** + animated **title underline** + **progress bar** + ducked music. Big jump over the old flat-bg reels. (`broll_agent.py`, `voice_reel.py`, `_captions.py`.)
+- **Carousel variety** — 6 rotating palettes, gradient backgrounds, accent blobs, layout rotation (no more identical flat slides).
+- **Free LLM fallback** — Gemini primary; on a 429 falls straight to **Groq** (free, no card, ~14.4k req/day). Beats the daily-quota wall without billing. (`agents/_llm.py`.)
+- **Daily content mix** — publish enforces **2 reels + 1 carousel / UTC day** (`daily_mix`), reels first, with empty-queue fallback + ~6h spacing.
+- **LLM quality gate** — each reel/carousel scored 1-10; best of 2 attempts kept; dry content regenerated.
+- **Reliable reel publishing** — re-hosts under a fresh name on Meta 2207077 fetch flake; failed publishes stay `designed` to retry (no lost posts / quota miscount).
+- **Post notifications** — `agents/notify.py` pings ntfy / Discord / Slack when a post goes live (set one webhook secret).
+- **Monetization funnel live** — bio → free cheat-sheet (Kit email) → Sovrn affiliate → Gumroad product (GitHub Pages).
+- Comment auto-reply, Stories auto-promo, rich analytics dashboard, performance feedback loop, hashtag rotation, **FLOW.md** maintenance guide.
 
 ### 🔄 In progress / needs attention
-- **Gemini free-tier quota** is the current bottleneck — heavy days hit the daily 429 cap, which skips script/idea generation. **Recommended: enable billing on the Gemini key** (a few $/mo) to remove it.
-- **Clips** — YouTube is blocked from CI (datacenter-IP bot block; cookies expire in ~a day; PO-token didn't beat it). **Switched to Vimeo CC** (cookie-free, CI-friendly): daily clip.yml, safety+relevance LLM vetting (rejects promos/NSFW), dedup, English captions. Works automated & $0, but Vimeo's niche pool is thin → clips are occasional (skips when nothing good). Voice reels remain the reliable reel base; publish prefers reels. For top-tier tutorial content, YouTube-from-residential-IP (self-hosted runner/proxy) stays the fallback.
+- **Let it run** (user, 2026-06-30) — pipeline running on Groq-backed generation; review after a few days of analytics before adding Phase D.
+- **Combined LLM quota** — Gemini + Groq free tiers now cover daily load; watch if heavy days exhaust both.
+- **Vimeo CC clips** — occasional real-footage variety (cookie-free, LLM-vetted); thin niche pool so they skip when nothing good. B-roll voice reels are the daily base.
+- **Notification channel** — wire the chosen secret (ntfy topic / Discord / Slack webhook).
 
-### ⬜ Pending (audience-gated — low value until followers grow)
-- #11 Media kit, #12 Sponsored slots (need reach to matter).
+### ⬜ Pending
+- **Phase D (optional, post-analytics):** theme/angle rotation to avoid repetition; music asset cache; evaluate talking-head/avatar reels; YouTube-from-residential-IP for premium tutorial clips.
+- #11 Media kit, #12 Sponsored slots (audience-gated — need reach to matter).
 - #13–15 Scale (multi-account, cross-platform, SaaS).
 
 ---

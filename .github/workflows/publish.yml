@@ -25,6 +25,9 @@ jobs:
           IMGBB_API_KEY:       ${{ secrets.IMGBB_API_KEY }}
           SUPABASE_URL:        ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY:        ${{ secrets.SUPABASE_KEY }}
+          NTFY_TOPIC:          ${{ secrets.NTFY_TOPIC }}
+          DISCORD_WEBHOOK:     ${{ secrets.DISCORD_WEBHOOK }}
+          SLACK_WEBHOOK:       ${{ secrets.SLACK_WEBHOOK }}
         run: |
           python -c "
           import json, yaml
@@ -111,4 +114,8 @@ jobs:
                       published_at=datetime.now(timezone.utc).isoformat(),
                       post_id=result.get('id'))
           print(f'Published! IG post ID: {result.get(\"id\")}')
+          from agents import notify
+          notify.send(f'New {post[\"content_type\"]} posted',
+                      post.get('hook') or 'A new post is live.',
+                      url='https://www.instagram.com/' + (config.get('instagram_handle','').lstrip('@')))
           "

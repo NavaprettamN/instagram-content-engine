@@ -94,18 +94,20 @@ SUPABASE_URL            # Supabase project URL
 SUPABASE_KEY            # Supabase service_role key (not anon)
 YOUTUBE_API_KEY         # YouTube Data API (TrendAgent) — free, 10k units/day
 JAMENDO_CLIENT_ID       # Jamendo API (MusicAgent reel music) — optional; unset = silent reels
+GROQ_API_KEY            # Free LLM fallback when Gemini 429s (agents/_llm.py) — no card
+PEXELS_API_KEY          # Free stock footage for b-roll reels (agents/broll_agent.py)
+NTFY_TOPIC / DISCORD_WEBHOOK / SLACK_WEBHOOK  # Optional post notifications (agents/notify.py)
 GH_PAT                  # GitHub PAT with secrets:write — only for refresh_token.yml
 META_APP_ID / META_APP_SECRET  # Legacy; not used by current publish/refresh flow
 ```
 
-### Monetization Roadmap
+### Tasks — MANDATORY end-of-work step
 
-See `tasks.md` for the full growth → monetization roadmap (synced with Notion "Let's Ship" → Tasks database). Current focus areas by priority:
+The overarching goal of this project is **to make money** from the Instagram account (grow reach/followers → monetize). Every change should serve that.
 
-1. **Best-Time-to-Post optimizer** — Analytics-driven cron tuning (Jul 1–7)
-2. **Comment auto-reply agent** — Algorithm boost via 1hr engagement window (Jul 7–14)
-3. **Affiliate link engine** — First revenue stream, $500–2K/mo target (Aug 1–31)
-4. **Link-in-bio manager** — Conversion funnel: content → affiliate → lead magnet → product (Jul 21–28)
+`tasks.md` is the roadmap; `PLAN.md` is the active content-quality/machine plan. **At the end of every piece of work, update `tasks.md`** (and `PLAN.md`'s status log when relevant): mark what's done, in progress, and pending. Not optional — keep them current so context survives across sessions.
+
+Also add new env vars to the Environment variables list above when introduced (e.g. `GROQ_API_KEY`, `PEXELS_API_KEY`, notification webhooks).
 
 ### config.yaml
 
