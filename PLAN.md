@@ -90,6 +90,9 @@ Keep the original-voiceover format (reliable, $0, no cookies) but put **real mov
 - 2026-06-30: **Phase A built** (b-roll voice reels — `broll_agent.py` + `voice_reel.build` + `generate.yml`). Filtergraph validated locally. **Needs `PEXELS_API_KEY` to activate** (falls back to solid bg without it).
 - 2026-06-30: **Phase B built** (carousel variety — 6 rotating palettes, gradient bgs, accent blobs, layout rotation). Live, no key needed. Verified 3 ids render distinct.
 - 2026-06-30: **Phase A ACTIVATED** — `PEXELS_API_KEY` set (`.env` + GH secret). CI rendered idea 59 as a real b-roll reel (frustrated-woman-at-laptop footage + title banner + middle captions), **posted live IG `18075312215487097`**. Meta 2207077 fetch flake fixed properly: `publish_reel` now re-hosts under a fresh object name + retries (query-param cache-buster was useless); `voice_reel` forces `fps=30`.
+- 2026-06-30: **Motion graphics shipped** — #1 kinetic word-pop captions (libass `\fad`+`\t` scale) + title fade; #2 ffmpeg motion overlays (title underline wipe-in + accent progress bar). Chose ffmpeg over movis (movis needs numpy<2 + PySide6/Qt — too fragile for CI). Verified live: IG `18107918467988745`.
+- 2026-06-30: **Free LLM fallback shipped** — Gemini primary, on 429 falls straight to **Groq** (`llama-3.3-70b-versatile`, free, no card, ~14.4k rpd). `GROQ_API_KEY` set (`.env`+secret). Proven: generate ran on Groq while Gemini was capped. Beats the daily-quota wall without billing.
+- 2026-06-30: **Publish hardening** — `publish_reel` re-hosts under a fresh name on Meta 2207077 (retried 2×); `publish.yml` no longer marks a failed publish as published (leaves it designed to retry).
 - NEXT: **Phase C** — daily 2-reel+1-carousel quota + LLM quality gate (reject/regen weak scripts) + asset cache.
 
 ---
