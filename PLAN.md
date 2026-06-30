@@ -93,7 +93,8 @@ Keep the original-voiceover format (reliable, $0, no cookies) but put **real mov
 - 2026-06-30: **Motion graphics shipped** — #1 kinetic word-pop captions (libass `\fad`+`\t` scale) + title fade; #2 ffmpeg motion overlays (title underline wipe-in + accent progress bar). Chose ffmpeg over movis (movis needs numpy<2 + PySide6/Qt — too fragile for CI). Verified live: IG `18107918467988745`.
 - 2026-06-30: **Free LLM fallback shipped** — Gemini primary, on 429 falls straight to **Groq** (`llama-3.3-70b-versatile`, free, no card, ~14.4k rpd). `GROQ_API_KEY` set (`.env`+secret). Proven: generate ran on Groq while Gemini was capped. Beats the daily-quota wall without billing.
 - 2026-06-30: **Publish hardening** — `publish_reel` re-hosts under a fresh name on Meta 2207077 (retried 2×); `publish.yml` no longer marks a failed publish as published (leaves it designed to retry).
-- NEXT: **Phase C** — daily 2-reel+1-carousel quota + LLM quality gate (reject/regen weak scripts) + asset cache.
+- 2026-06-30: **Phase C shipped** — (1) `publish.yml` enforces a daily MIX (`daily_mix`: 2 reels + 1 carousel/UTC day), picking a type under target with queue, reels first, falling back so no slot is wasted. (2) Quality gate: `ContentAgent.quality_score`/`generate_quality` scores each reel/carousel 1-10, keeps best of 2 attempts, stops dry content (cheap now via Groq). Verified: gate scored 8/10 via Groq; mix selection covers all queue states; publish gate runs clean in CI.
+- NEXT (Phase D / polish, optional): theme rotation to avoid repeating angles; asset cache for music; evaluate avatar/talking-head reels after a week of analytics. Recurring watch: Groq/Gemini combined quota; b-roll relevance.
 
 ---
 
