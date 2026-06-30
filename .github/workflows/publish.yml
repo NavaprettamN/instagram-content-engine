@@ -39,14 +39,17 @@ jobs:
           # Exact-hour gating was brittle — GitHub cron is delayed 60-90 min, so
           # runs almost never land on the target hour and everything got skipped.
           # Quota + spacing is resilient to that and still spreads posts out.
+          from collections import Counter
           now = datetime.now(timezone.utc)
-          ppd = config.get('posts_per_day', 3)
+          # Daily MIX: aim for this many of each type per day (default 2 reels + 1 carousel).
+          mix = config.get('daily_mix', {'reel': 2, 'carousel': 1})
+          ppd = sum(mix.values())
           min_gap_h = max(2, round(18 / ppd))  # ~6h apart for 3/day
           published = get_ideas(status='published')
           today = now.date().isoformat()
-          posted_today = sum(1 for p in published if (p.get('published_at') or '').startswith(today))
-          if posted_today >= ppd:
-              print(f'Daily quota reached ({posted_today}/{ppd}); skipping.')
+          todays = [p for p in published if (p.get('published_at') or '').startswith(today)]
+          if len(todays) >= ppd:
+              print(f'Daily quota reached ({len(todays)}/{ppd}); skipping.')
               exit(0)
           times = sorted(p['published_at'] for p in published if p.get('published_at'))
           if times:
@@ -64,10 +67,25 @@ jobs:
               print('No designed posts ready to publish.')
               exit(0)
 
-          # Prefer reels (YouTube clips) — they perform best — then carousels.
+          # Pick a type still under its daily target that has something queued
+          # (reels first — best reach). If the target type's queue is empty or all
+          # targets are met, fall back to whatever's available so a slot isn't wasted.
+          done = Counter(p.get('content_type') for p in todays)
+          avail = Counter(p.get('content_type') for p in designed)
+          chosen = None
+          for t in ('reel', 'carousel'):
+              if done.get(t, 0) < mix.get(t, 0) and avail.get(t, 0) > 0:
+                  chosen = t
+                  break
+          if chosen is None:
+              for t in ('reel', 'carousel'):
+                  if avail.get(t, 0) > 0:
+                      chosen = t
+                      break
           # designed is newest-first, so [-1] is the oldest of the chosen group.
-          reels = [p for p in designed if p.get('content_type') == 'reel']
-          post = (reels or designed)[-1]
+          group = [p for p in designed if p.get('content_type') == chosen] or designed
+          post = group[-1]
+          print(f'Daily mix so far: {dict(done)} / target {mix}; choosing {chosen}.')
           agent = PublishingAgent(config)
           paths = json.loads(post['image_paths']) if post.get('image_paths') else []
           caption = compose_caption(post, count_ideas('published'))  # rotated hashtag set appended

@@ -64,8 +64,9 @@ jobs:
                   # carousels unless generate_reels is explicitly turned on.
                   as_reel = config.get('generate_reels', False) and (idea['id'] % 3) != 0
                   if as_reel:
-                      # ORIGINAL voiceover reel: script -> edge-tts -> synced captions
-                      vs = ca.generate_voice_script(idea)
+                      # ORIGINAL voiceover reel: script -> edge-tts -> synced captions.
+                      # quality gate: score the script, regenerate weak ones.
+                      vs = ca.generate_quality(idea, 'reel', threshold=config.get('quality_threshold', 7))
                       music = ma.pick_track(idea['hook'], f'{base}/music.mp3')  # CC track or None
                       clips = br.fetch_clips(vs.get('b_roll_terms'))  # moving stock footage ([] if no key)
                       reel = vra.build(vs.get('hook', idea['hook']), vs['script'],
@@ -76,7 +77,7 @@ jobs:
                       if music:
                           caption = (caption + '\n\n' + music['credit']).strip()  # CC attribution
                   else:
-                      content = ca.generate_carousel(idea)
+                      content = ca.generate_quality(idea, 'carousel', threshold=config.get('quality_threshold', 7))
                       local_paths = da.generate_carousel_images(content, idea['id'])
                       media = [pa.upload_image_to_hosting(p) for p in local_paths]
                       caption, fmt = content.get('caption') or idea.get('caption_draft') or '', 'carousel'

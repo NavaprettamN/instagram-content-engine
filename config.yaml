@@ -105,6 +105,12 @@ posting_times:
   - "14:00"
   - "20:00"
 posts_per_day: 3
+# Daily content mix (publish.yml enforces this per UTC day; sum = posts/day).
+daily_mix:
+  reel: 2
+  carousel: 1
+# Quality gate: generated content scoring below this (1-10) is regenerated.
+quality_threshold: 7
 
 # ── Secrets ───────────────────────────────────────────────────────
 # All API keys and tokens are loaded from environment variables (.env locally,

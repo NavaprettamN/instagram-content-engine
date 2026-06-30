@@ -64,6 +64,43 @@ Rules:
                 result["caption"] = result["caption"].replace(ph, self.handle)
         return result
 
+    def quality_score(self, content, kind):
+        """Rate a generated reel/carousel 1-10 on hook strength + value for reach.
+        Best-effort: returns a neutral 6 if scoring fails (never blocks generation)."""
+        if not isinstance(content, dict):
+            return 0
+        hook = content.get("hook") or content.get("slide_1_hook") or ""
+        body = content.get("script") or content.get("slide_1_subtext") or ""
+        try:
+            r = generate_text(
+                f"You are a ruthless short-form content editor for the {self.niche} niche.\n"
+                f"Rate this Instagram {kind} OPENING for scroll-stopping power, clarity, and "
+                f"value 1-10 (10=excellent, would stop a scroll and earn a save).\n"
+                f'HOOK: "{hook}"\nOPENING: "{body}"\n'
+                'Return JSON: {"score": <int 1-10>}',
+                system="Return only valid JSON.", json_response=True, temperature=0.0,
+            )
+            return int(r.get("score", 6))
+        except Exception as e:
+            print(f"  quality_score failed ({str(e)[:80]}) — assuming 6")
+            return 6
+
+    def generate_quality(self, idea, kind, threshold=7, attempts=2):
+        """Generate a reel script / carousel, scoring each attempt and keeping the
+        best; stops early once an attempt clears `threshold`. The quality gate that
+        stops dry/boring content reaching Instagram."""
+        gen = self.generate_voice_script if kind == "reel" else self.generate_carousel
+        best, best_score = None, -1
+        for n in range(1, attempts + 1):
+            c = gen(idea)
+            s = self.quality_score(c, kind)
+            print(f"  quality {kind} attempt {n}: {s}/10")
+            if s > best_score:
+                best, best_score = c, s
+            if s >= threshold:
+                break
+        return best
+
     def generate_voice_script(self, idea):
         """Original voiceover reel: {hook (top title), script (narration), caption}."""
         affiliate = ""
