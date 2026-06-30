@@ -21,6 +21,7 @@ jobs:
       - name: Run Research Agent
         env:
           GEMINI_API_KEY:      ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY:      ${{ secrets.GROQ_API_KEY }}
           YOUTUBE_API_KEY:     ${{ secrets.YOUTUBE_API_KEY }}
           SUPABASE_URL:        ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY:        ${{ secrets.SUPABASE_KEY }}

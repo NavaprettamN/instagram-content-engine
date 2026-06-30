@@ -34,6 +34,7 @@ jobs:
       - name: Clip a CC video and queue it
         env:
           GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY:    ${{ secrets.GROQ_API_KEY }}
           VIMEO_TOKEN:       ${{ secrets.VIMEO_TOKEN }}
           YOUTUBE_API_KEY:   ${{ secrets.YOUTUBE_API_KEY }}
           META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
