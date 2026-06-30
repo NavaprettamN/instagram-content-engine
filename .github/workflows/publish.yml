@@ -83,6 +83,11 @@ jobs:
               print('ERROR: no image paths found')
               exit(1)
 
+          if not result.get('id'):
+              # publish failed (e.g. Meta fetch error) — leave it 'designed' so the
+              # next run retries instead of losing the post + miscounting quota.
+              print(f'Publish FAILED, leaving designed for retry: {result}')
+              exit(1)
           update_idea(post['id'],
                       status='published',
                       published_at=datetime.now(timezone.utc).isoformat(),

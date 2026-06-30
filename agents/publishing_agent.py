@@ -120,7 +120,7 @@ class PublishingAgent:
         # re-download the MP4 and re-host it, then retry against the new URL.
         result = self._publish_reel_once(video_url, caption, cover_url)
         if isinstance(result, dict) and result.get("error", {}).get("error_subcode") == 2207077:
-            fresh = self._rehost(video_url)
+            fresh = self._rehost(video_url) or self._rehost(video_url)  # 2nd try: Supabase upload is occasionally flaky
             if fresh:
                 result = self._publish_reel_once(fresh, caption, cover_url)
         return result
