@@ -170,26 +170,29 @@ Exactly {len(sentences)} scenes, in order. Vary subjects/settings between scenes
             shutil.rmtree(pub, ignore_errors=True)
 
         # mux: voice + ducked music + a whoosh on every cut (scene 2..n)
-        inputs = ["-i", silent, "-i", voice_mp3]
+        inputs, n_in = ["-i", silent, "-i", voice_mp3], 2
         labels, filters = ["[voice]"], ["[1:a]anull[voice]"]
         if music_path:
             inputs += ["-stream_loop", "-1", "-i", music_path]
-            filters.append("[2:a]volume=0.13[m]")
+            filters.append(f"[{n_in}:a]volume=0.13[m]")
             labels.append("[m]")
+            n_in += 1
         if os.path.exists(SFX_WHOOSH):
             for j, s in enumerate(scenes[1:]):
-                idx = len(inputs) // 2  # next input index
                 inputs += ["-i", SFX_WHOOSH]
                 ms = max(int(s["from"] / FPS * 1000) - 150, 0)  # lead the cut slightly
-                filters.append(f"[{idx}:a]adelay={ms}|{ms},volume=0.35[s{j}]")
+                filters.append(f"[{n_in}:a]adelay={ms}|{ms},volume=0.35[s{j}]")
                 labels.append(f"[s{j}]")
+                n_in += 1
         filters.append(f"{''.join(labels)}amix=inputs={len(labels)}:duration=first:normalize=0[a]")
-        subprocess.run(
+        r = subprocess.run(
             ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(filters),
              "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "128k",
              "-movflags", "+faststart", out_path],
-            check=True, capture_output=True, text=True,
+            capture_output=True, text=True,
         )
+        if r.returncode != 0:
+            raise RuntimeError(f"scene mux ffmpeg failed:\n{r.stderr[-1200:]}")
         return out_path
 
 
@@ -202,7 +205,10 @@ if __name__ == "__main__":
     content = {"script": ("You are wasting two hours every single day. AI can write your "
                           "emails in seconds. It can plan your whole week in one tap. "
                           "Start with just one tool today. Follow for more.")}
+    from agents.music_agent import MusicAgent
+    music = MusicAgent(cfg).pick_track("test", "/tmp/scene_check/music.mp3", seed=3)
     p = a.build(content, "/tmp/scene_check/reel.mp4", idea_id=3,
+                music_path=(music["path"] if music else None),
                 broll=BRollAgent({"output_dir": "/tmp/scene_check"}))
     assert os.path.getsize(p) > 200_000, p
     print("scene_reel self-check OK:", p)
