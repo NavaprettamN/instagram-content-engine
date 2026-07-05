@@ -98,7 +98,8 @@ is the same capability without a server to babysit. So:
    steps; reel ideas with `id % 4 == 1` go motion, any failure falls back to
    b-roll voice reel. Verified e2e locally (Groq content 9/10 → 13.3s h264+aac
    with CC track) AND in CI: idea 89 re-generated as a motion reel (8/10,
-   15.5s, hosted on Supabase), queued to publish at the next reel slot.
+   15.5s, hosted on Supabase), **published live** IG `18001552559949970`
+   (instagram.com/reel/DaapiugEtc3).
    Upgrade path: voiceover-synced motion reels (needs per-item TTS timing);
    more templates (quote card, before/after).
 4. Watch analytics ≥1 week: which pillar/format wins → adjust weights.
