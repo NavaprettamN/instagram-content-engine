@@ -19,6 +19,15 @@ jobs:
       - name: Install ffmpeg (reel ideas render a slideshow video)
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: remotion/package-lock.json
+
+      - name: Install Remotion (motion-graphics reels)
+        run: npm ci --prefix remotion
+
       - run: pip install -r requirements.txt
 
       - name: Generate content and designs for approved ideas
@@ -38,6 +47,7 @@ jobs:
           from agents.hashtag_agent import HashtagAgent
           from agents.publishing_agent import PublishingAgent
           from agents.voice_reel import VoiceReelAgent
+          from agents.motion_reel import MotionReelAgent
           from agents.broll_agent import BRollAgent
           from agents.music_agent import MusicAgent
           from agents._db import get_ideas, update_idea
@@ -48,6 +58,7 @@ jobs:
           ha = HashtagAgent(config)
           pa = PublishingAgent(config)
           vra = VoiceReelAgent(config)
+          mra = MotionReelAgent(config)
           br = BRollAgent(config)
           ma = MusicAgent(config)
 
@@ -64,15 +75,25 @@ jobs:
                   # carousels unless generate_reels is explicitly turned on.
                   as_reel = config.get('generate_reels', False) and (idea['id'] % 3) != 0
                   if as_reel:
-                      # ORIGINAL voiceover reel: script -> edge-tts -> synced captions.
-                      # quality gate: score the script, regenerate weak ones.
-                      vs = ca.generate_quality(idea, 'reel', threshold=config.get('quality_threshold', 7))
                       # idea id seeds result rotation so reels don't reuse the same track/footage
                       music = ma.pick_track(idea['hook'], f'{base}/music.mp3', seed=idea['id'])  # CC track or None
-                      clips = br.fetch_clips(vs.get('b_roll_terms'), variant=idea['id'])  # moving stock footage ([] if no key)
-                      reel = vra.build(vs.get('hook', idea['hook']), vs['script'],
-                                       f'{base}/reel.mp4', music_path=(music['path'] if music else None),
-                                       broll_paths=clips)
+                      reel = None
+                      if (idea['id'] % 4) == 1:  # ~1 in 4 reels: animated-insight (Remotion motion graphics)
+                          try:
+                              vs = ca.generate_quality(idea, 'motion', threshold=config.get('quality_threshold', 7))
+                              reel = mra.build(vs, f'{base}/reel.mp4', idea_id=idea['id'],
+                                               music_path=(music['path'] if music else None))
+                              print('  -> motion reel rendered')
+                          except Exception as me:
+                              print(f'  motion reel failed ({str(me)[:150]}) — falling back to b-roll')
+                      if reel is None:
+                          # ORIGINAL voiceover reel: script -> edge-tts -> synced captions.
+                          # quality gate: score the script, regenerate weak ones.
+                          vs = ca.generate_quality(idea, 'reel', threshold=config.get('quality_threshold', 7))
+                          clips = br.fetch_clips(vs.get('b_roll_terms'), variant=idea['id'])  # moving stock footage ([] if no key)
+                          reel = vra.build(vs.get('hook', idea['hook']), vs['script'],
+                                           f'{base}/reel.mp4', music_path=(music['path'] if music else None),
+                                           broll_paths=clips)
                       media = [pa.upload_video_to_hosting(reel)]
                       content, caption, fmt = vs, vs.get('caption') or '', 'reel'
                       if music:

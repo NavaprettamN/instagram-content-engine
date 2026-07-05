@@ -87,8 +87,18 @@ is the same capability without a server to babysit. So:
    run produced habits + side-hustle + AI ideas in one batch. Deferred: `pillar`
    column in Supabase (needs manual migration) — add when analytics-by-pillar
    is wanted.
-3. **E3** (Remotion, biggest lift ~1–2 sessions) — render one template locally,
-   then in CI, publish one live.
+3. **E3** ✅ 2026-07-05 — Remotion motion-graphics reels shipped. `remotion/`
+   (Node, 2 templates: `KineticList` kinetic-typography list, `BigStat` animated
+   count-up stat; shared brand chrome = gradient bg + drifting accent blob +
+   progress bar + outro CTA; palettes imported from design_agent via props;
+   Inter via public/fonts symlink). `ContentAgent.generate_motion` (music-only,
+   no voiceover — text IS the visual) routed through the same quality gate;
+   `agents/motion_reel.py` renders via `npx remotion render` + muxes music
+   (or silent AAC — IG rejects audio-less files). `generate.yml`: node+npm ci
+   steps; reel ideas with `id % 4 == 1` go motion, any failure falls back to
+   b-roll voice reel. Verified e2e locally: Groq content 9/10 → rendered
+   13.3s h264+aac with CC track. Upgrade path: voiceover-synced motion reels
+   (needs per-item TTS timing); more templates (quote card, before/after).
 4. Watch analytics ≥1 week: which pillar/format wins → adjust weights.
 
 ---

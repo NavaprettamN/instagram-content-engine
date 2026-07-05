@@ -70,7 +70,8 @@ Rules:
         if not isinstance(content, dict):
             return 0
         hook = content.get("hook") or content.get("slide_1_hook") or ""
-        body = content.get("script") or content.get("slide_1_subtext") or ""
+        body = (content.get("script") or content.get("slide_1_subtext")
+                or " | ".join(map(str, content.get("items") or content.get("lines") or [])))
         try:
             r = generate_text(
                 f"You are a ruthless short-form content editor for the {self.niche} niche.\n"
@@ -89,7 +90,8 @@ Rules:
         """Generate a reel script / carousel, scoring each attempt and keeping the
         best; stops early once an attempt clears `threshold`. The quality gate that
         stops dry/boring content reaching Instagram."""
-        gen = self.generate_voice_script if kind == "reel" else self.generate_carousel
+        gen = {"reel": self.generate_voice_script,
+               "motion": self.generate_motion}.get(kind, self.generate_carousel)
         best, best_score = None, -1
         for n in range(1, attempts + 1):
             c = gen(idea)
@@ -124,6 +126,41 @@ Return JSON:
 }}
 Rules: the script must sound natural read aloud; use numbers/specifics over fluff.""",
             system=f"Expert short-form video scriptwriter for {self.niche}. Return only valid JSON.",
+            json_response=True, temperature=0.7,
+        )
+        if isinstance(result, dict) and result.get("caption") and self.handle:
+            for ph in ("@[YourHandle]", "[YourHandle]", "@YourHandle", "[your handle]"):
+                result["caption"] = result["caption"].replace(ph, self.handle)
+        return result
+
+    def generate_motion(self, idea):
+        """Animated-insight reel (Remotion): text-on-motion, music only, no voiceover.
+        Returns props for the KineticList or BigStat template + a caption."""
+        result = generate_text(
+            f"""Create the content for a short ANIMATED TEXT Instagram reel (kinetic
+typography — the text IS the visual; there is no narrator, so every line must
+read instantly).
+
+IDEA: {idea['hook']}
+OUTLINE: {json.dumps(idea['outline']) if isinstance(idea['outline'], list) else idea['outline']}
+BRAND VOICE: {self.brand_voice}
+
+Pick ONE template:
+- "list" (default): a punchy numbered list.
+- "stat": ONLY if the idea centers on one striking, real number.
+
+Return JSON:
+{{
+  "template": "list" or "stat",
+  "hook": "3-6 word on-screen title — bold claim or curiosity gap",
+  "items": ["4-5 list entries, max 7 words each, specific not generic (list template)"],
+  "stat": <the number, digits only (stat template)>,
+  "suffix": "e.g. % or x or hrs (stat template)",
+  "label": "max 8 words: what the number means (stat template)",
+  "lines": ["2-3 supporting lines, max 10 words each (stat template)"],
+  "caption": "Instagram caption: hook line, the value expanded, a save/share CTA, a question, and a follow CTA using {self.handle}."
+}}""",
+            system=f"Expert short-form motion-graphics writer for {self.niche}. Return only valid JSON.",
             json_response=True, temperature=0.7,
         )
         if isinstance(result, dict) and result.get("caption") and self.handle:
