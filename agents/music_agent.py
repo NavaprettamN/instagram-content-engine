@@ -39,9 +39,13 @@ class MusicAgent:
         except Exception:
             return self.default_tag
 
-    def _query(self, tags):
-        """Return the top downloadable instrumental for a tag, or None."""
-        params = {"client_id": self.client_id, "format": "json", "limit": 1,
+    def _query(self, tags, seed=0):
+        """Return a downloadable instrumental for a tag, rotated by seed, or None.
+
+        limit=1 + popularity order gave every reel the same #1 track per mood;
+        pull a pool and pick by seed so consecutive reels sound different.
+        """
+        params = {"client_id": self.client_id, "format": "json", "limit": 20,
                   "audioformat": "mp32", "vocalinstrumental": "instrumental",
                   "order": "popularity_total", "audiodownload_allowed": "true"}
         if tags:
@@ -49,16 +53,16 @@ class MusicAgent:
         r = requests.get(BASE, params=params, timeout=20)
         r.raise_for_status()
         results = r.json().get("results", [])
-        return results[0] if results else None
+        return results[seed % len(results)] if results else None
 
-    def pick_track(self, hook, out_path):
+    def pick_track(self, hook, out_path, seed=0):
         """Download a mood-matching CC instrumental. Returns {'path','credit'} or None."""
         if not self.client_id:
             return None
         try:
             # progressively relax: LLM mood -> default mood -> any instrumental
             for tags in (self._mood_tag(hook), self.default_tag, ""):
-                t = self._query(tags)
+                t = self._query(tags, seed=seed)
                 if t:
                     break
             audio_url = t.get("audiodownload") or t.get("audio") if t else None

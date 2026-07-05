@@ -37,11 +37,15 @@ class BRollAgent:
         pool.sort(key=lambda f: (f.get("width") or 0) * (f.get("height") or 0))
         return pool[0]["link"] if pool else None
 
-    def fetch_one(self, term, min_seconds=4):
-        """Download a single clip for `term`. Returns a local path or None."""
+    def fetch_one(self, term, min_seconds=4, variant=0):
+        """Download a single clip for `term`. Returns a local path or None.
+
+        `variant` rotates which search result gets used, so the same term on a
+        different idea yields different footage instead of Pexels' #1 forever.
+        """
         if not self.enabled:
             return None
-        dest = os.path.join(self.cache_dir, f"{self._slug(term)}.mp4")
+        dest = os.path.join(self.cache_dir, f"{self._slug(term)}_{variant % 10}.mp4")
         if os.path.exists(dest) and os.path.getsize(dest) > 10_000:
             return dest
         try:
@@ -49,12 +53,15 @@ class BRollAgent:
                 PEXELS_VIDEO_SEARCH,
                 headers={"Authorization": self.key},
                 params={"query": term, "orientation": "portrait",
-                        "per_page": 5, "size": "medium"},
+                        "per_page": 10, "size": "medium"},
                 timeout=20,
             )
             r.raise_for_status()
             vids = [v for v in r.json().get("videos", [])
                     if (v.get("duration") or 0) >= min_seconds]
+            if vids:  # rotate start point; keep the rest as fallback order
+                i = variant % len(vids)
+                vids = vids[i:] + vids[:i]
             for v in vids:
                 link = self._best_portrait_file(v)
                 if not link:
@@ -68,11 +75,11 @@ class BRollAgent:
             print(f"BRollAgent: '{term}' failed ({e})")
         return None
 
-    def fetch_clips(self, terms, limit=6):
+    def fetch_clips(self, terms, limit=6, variant=0):
         """Return downloaded clip paths for the given search terms (in order)."""
         paths = []
         for t in (terms or [])[:limit]:
-            p = self.fetch_one(t)
+            p = self.fetch_one(t, variant=variant)
             if p:
                 paths.append(p)
         return paths

@@ -23,6 +23,7 @@ Synced from Notion "Let's Ship" → Tasks database (linked to Instagram Content 
 - Comment auto-reply, Stories auto-promo, rich analytics dashboard, performance feedback loop, hashtag rotation, **FLOW.md** maintenance guide.
 
 ### 🔄 In progress / needs attention
+- **Phase E planned (2026-07-05)** — user feedback after a week live: carousels too samey, all-AI topics cap reach, reels reuse the same stock clips. New plan in PLAN.md: E1 content pillars (broaden beyond AI), E2 b-roll/music rotation ✅ shipped (idea-id-seeded result rotation, verified different clips + tracks), E3 Remotion motion-graphics reels (free license), E4 MCP question scoped out (pipeline uses plain APIs). Next: E1, then E3.
 - **Let it run** (user, 2026-06-30) — pipeline running on Groq-backed generation; review after a few days of analytics before adding Phase D.
 - **Combined LLM quota** — Gemini + Groq free tiers now cover daily load; watch if heavy days exhaust both.
 - **Vimeo CC clips** — occasional real-footage variety (cookie-free, LLM-vetted); thin niche pool so they skip when nothing good. B-roll voice reels are the daily base.

@@ -5,7 +5,89 @@
 
 ---
 
-# ▶ ACTIVE: Content Quality + "Proper Machine" Roadmap (2026-06-30)
+# ▶ ACTIVE: Phase E — Variety + Motion (2026-07-05)
+
+Phases A–C below shipped and the machine runs daily. New user feedback:
+1. **Carousels too consistent** — same look every day reads as a template farm.
+2. **Everything is AI-topic** — one pillar caps reach; algorithm can't fan us out.
+3. **Reels are static** — same cached stock clips looping under captions.
+4. Wants motion graphics / better editing / music, and asked how "MCPs + Gemini"
+   could level up content.
+
+## E1 — Content pillars (strategy, no new infra)
+
+Stop being "the AI account"; become "work smarter" with rotating pillars.
+`config.yaml` gets `content_pillars` (weights ≈ rotation):
+
+- **AI tools** (keep, ~40%) — current content, it's the niche anchor.
+- **Productivity systems & habits** — broad-reach, non-AI (deep work, 2-min rule…).
+- **Money / side-hustle with tech** — highest save/share rates in this space.
+- **Contrarian takes / myths** — engagement-bait pillar ("Stop using ChatGPT for X").
+- **Relatable memes / quote cards** — shareability; cheap to render.
+
+`ResearchAgent` prompt: pick pillar by rotation (published-count % N, weighted),
+tag each idea with `pillar`; quality gate + dashboard show it. RSS/subreddits
+gain 2–3 non-AI sources (r/productivity already there; add e.g. r/getdisciplined,
+a productivity RSS). Theme rotation (old Phase D item) folds in here: don't
+repeat a pillar+angle within 5 days.
+
+## E2 — Reels that don't repeat (quick wins, ffmpeg stays)
+
+- **Fix b-roll staleness**: cache is keyed by search term only → same term = same
+  clip forever. Key by (term, result-index) and rotate index per idea; ask Gemini
+  for more specific/varied search terms (scene-level, not topic-level).
+- **Beat the "stock video" look**: heavier use of what shipped in June — speed
+  ramps (`setpts`), punch-in on caption beats, colour grade LUT per pillar,
+  1–2 cutaways more per reel (shorter clip share).
+- **Music**: verify `JAMENDO_CLIENT_ID` is set (silent reels kill retention);
+  mood chosen per-pillar, cache tracks.
+
+## E3 — Motion-graphics reels (Remotion, the real upgrade)
+
+**Answer to "how do I do motion graphics":** [Remotion](https://www.remotion.dev/docs/license)
+— React → MP4, renders headless in GitHub Actions, **free for individuals**
+(commercial use included; company license only at 4+ people). Alternatives
+(Motion Canvas, Revideo) are viable but Remotion has the biggest ecosystem/templates.
+movis was already rejected (numpy/Qt pain); ffmpeg alone can't do real animation.
+
+New reel **format #3** ("animated insight"), 1–2×/week alongside b-roll reels:
+- `remotion/` Node project with 2–3 typed templates: kinetic-typography list
+  ("5 tools…"— items fly in), animated stat/chart reel, before/after comparison.
+- Gemini outputs the template's props JSON (title, items, numbers, colors by pillar).
+- `generate.yml` job: `npx remotion render` → MP4 → existing publish path.
+- Voiceover + music muxed by the existing ffmpeg step afterwards.
+- Fallback: render fails → b-roll reel. Never block the daily mix.
+
+## E4 — "MCPs + Gemini" (honest scoping)
+
+MCP is a protocol for *interactive* agents (Claude Code / OpenCode) to call tools.
+The cron pipeline doesn't need the MCP layer — a direct API call in an agent file
+is the same capability without a server to babysit. So:
+- **In the pipeline**: keep adding capability as plain APIs (Pexels ✓, Jamendo ✓,
+  YouTube ✓; candidates: Unsplash photos, Tenor GIFs for memes, more trend sources).
+- **At dev time**: MCPs already wired (GitHub, Notion, Playwright). Useful add:
+  none blocking — revisit if a real need appears.
+- Skip "Gemini function-calling to MCP servers" — extra moving parts, zero new output.
+
+## Build order & verification
+
+1. **E2** ✅ 2026-07-05 — root cause wasn't the local cache (CI runners are
+   fresh) but deterministic API picks: b-roll always took Pexels result #1,
+   music always took Jamendo's most-popular track per mood (limit=1). Both now
+   rotate by `idea['id']` (`fetch_clips(..., variant=id)`, `pick_track(..., seed=id)`),
+   b-roll pool 5→10, music pool 1→20; term prompt told to vary settings and not
+   parrot its own examples. Verified live: same term/mood → different clip md5s
+   + different tracks. `JAMENDO_CLIENT_ID` confirmed working (music was never
+   silent — just always the same #1 track).
+2. **E1** (config + research prompt + sources) — run research, confirm ideas span
+   ≥3 pillars with `pillar` tags.
+3. **E3** (Remotion, biggest lift ~1–2 sessions) — render one template locally,
+   then in CI, publish one live.
+4. Watch analytics ≥1 week: which pillar/format wins → adjust weights.
+
+---
+
+# 🗄 ARCHIVED-ISH: Content Quality + "Proper Machine" Roadmap (2026-06-30, A–C shipped)
 
 Goal unchanged: **make money** by growing real reach + followers. This section is
 the source of truth for *content quality + cadence*. Companions: `CLAUDE.md`

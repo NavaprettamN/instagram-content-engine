@@ -67,8 +67,9 @@ jobs:
                       # ORIGINAL voiceover reel: script -> edge-tts -> synced captions.
                       # quality gate: score the script, regenerate weak ones.
                       vs = ca.generate_quality(idea, 'reel', threshold=config.get('quality_threshold', 7))
-                      music = ma.pick_track(idea['hook'], f'{base}/music.mp3')  # CC track or None
-                      clips = br.fetch_clips(vs.get('b_roll_terms'))  # moving stock footage ([] if no key)
+                      # idea id seeds result rotation so reels don't reuse the same track/footage
+                      music = ma.pick_track(idea['hook'], f'{base}/music.mp3', seed=idea['id'])  # CC track or None
+                      clips = br.fetch_clips(vs.get('b_roll_terms'), variant=idea['id'])  # moving stock footage ([] if no key)
                       reel = vra.build(vs.get('hook', idea['hook']), vs['script'],
                                        f'{base}/reel.mp4', music_path=(music['path'] if music else None),
                                        broll_paths=clips)
