@@ -106,7 +106,8 @@ paths share one quality-gated script. Verified e2e locally: 5-sentence script â†
 on cuts, cinematic AI images + b-roll. Local dev now uses `.venv` (uv).
 Verified in CI after two real fixes (font delayRender raced 10s + 120s render
 timeout; SFX input-index bug that only hit when music was present): idea 85
-rendered as a 12.6s scene reel, hosted, queued to publish at the next reel slot.
+rendered as a 12.6s scene reel, hosted, **published live** IG `18138048202515156`
+(instagram.com/reel/DaazEL0k7Tw).
 
 ## Build order & verification
 
