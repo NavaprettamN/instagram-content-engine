@@ -104,6 +104,9 @@ KineticList/BigStat templates kept in repo but out of the rotation). Both reel
 paths share one quality-gated script. Verified e2e locally: 5-sentence script →
 4 scenes (short-sentence merge) → 13.7s reel with voice, ducked music, whooshes
 on cuts, cinematic AI images + b-roll. Local dev now uses `.venv` (uv).
+Verified in CI after two real fixes (font delayRender raced 10s + 120s render
+timeout; SFX input-index bug that only hit when music was present): idea 85
+rendered as a 12.6s scene reel, hosted, queued to publish at the next reel slot.
 
 ## Build order & verification
 
