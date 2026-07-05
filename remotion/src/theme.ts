@@ -10,17 +10,17 @@ export type Colors = {
 };
 
 // Load the bundled Inter fonts (remotion/public/fonts -> ../../fonts symlink).
-const ready = delayRender('loading Inter');
-Promise.all(
+// Raced against a 10s timer: on a saturated CI runner the font fetch can stall
+// behind video-asset streaming — a missed font must never fail the render.
+const ready = delayRender('loading Inter', {timeoutInMs: 120000});
+const loads = Promise.all(
   [
     new FontFace('Inter', `url('${staticFile('fonts/Inter-Bold.ttf')}')`, {weight: '700'}),
     new FontFace('Inter', `url('${staticFile('fonts/Inter-Regular.ttf')}')`, {weight: '400'}),
   ].map((f) => f.load()),
-)
-  .then((fonts) => {
-    fonts.forEach((f) => document.fonts.add(f));
-    continueRender(ready);
-  })
-  .catch(() => continueRender(ready)); // fall back to sans-serif, never hang the render
+).then((fonts) => fonts.forEach((f) => document.fonts.add(f)));
+Promise.race([loads, new Promise((res) => setTimeout(res, 10000))])
+  .catch(() => undefined) // fall back to sans-serif
+  .then(() => continueRender(ready));
 
 export const FONT = 'Inter, Helvetica, Arial, sans-serif';

@@ -50,7 +50,7 @@ class MotionReelAgent:
         silent = os.path.abspath(base + "_anim.mp4")
         r = subprocess.run(
             ["npx", "remotion", "render", "src/index.ts", template, silent,
-             f"--props={props_path}", "--log=error"],
+             f"--props={props_path}", "--log=error", "--timeout=120000"],
             cwd=REMOTION_DIR, capture_output=True, text=True,
         )
         if r.returncode != 0:
