@@ -69,6 +69,42 @@ is the same capability without a server to babysit. So:
   none blocking — revisit if a real need appears.
 - Skip "Gemini function-calling to MCP servers" — extra moving parts, zero new output.
 
+## E5 — Ad-style motion reels (v2 of E3; planned 2026-07-05)
+
+User verdict on E3 v1 (live test DaapiugEtc3): "just music and text popping in —
+not engaging." Correct. v1 is ONE continuous scene; ads are built from CUTS.
+What ad-grade faceless reels actually have, and the free path to each:
+
+| Ingredient | v1 | v2 plan |
+|---|---|---|
+| Voiceover driving pace | none (music only) | edge-tts (already built, Phase A) — sentence timings we already extract |
+| Scene cuts every 2–3s | one scene | 1 sentence = 1 full-screen scene (6–8 scenes/reel) |
+| Imagery | gradient bg | **AI-generated image per scene** (gemini-2.5-flash-image, free ~20+/day, needs ~7/reel) with cinematic brand-styled prompt, Ken-Burns/parallax; alternate scenes use Pexels b-roll video for realism |
+| Kinetic type | items pop in | 3–5 word headline per scene, word-by-word pop synced to the voice |
+| Sound design | none | whoosh/pop SFX on cuts (one-time CC0 pack in repo, ducked) |
+| Fallbacks | b-roll reel | image-gen fails → Pexels photo → gradient; whole build fails → b-roll voice reel |
+
+Build: new `Scenes` composition in remotion/ (props = per-scene {image, headline,
+start, dur} from TTS timings); `agents/scene_reel.py` = script → TTS → image
+prompts → nano banana → remotion render → mux voice+music+SFX. Replaces the
+v1 templates in the `id % 4 == 1` slot (KineticList/BigStat stay as fallback #1).
+
+Paid "think big" option (user decision, not default): Veo 3 via Gemini API
+(~$0.35+/s) or Runway for true generated video — revisit only if v2 + analytics
+justify spend.
+
+**E5 status (2026-07-05): SHIPPED.** Reality check vs the plan: Gemini image
+free tier turned out to be `limit: 0` on our key — swapped to **Pollinations.ai**
+(free, keyless, flux; 1080x1920 requested, ~576x1024 served, fine after video
+compression). SFX synthesized with ffmpeg (`assets/sfx/whoosh.wav`) instead of
+a downloaded pack. `agents/scene_reel.py` + `Scenes` composition; scenes
+alternate AI image / Pexels b-roll with per-scene fallback to the other, then
+gradient; whole-build failure falls back to the b-roll voice reel (v1
+KineticList/BigStat templates kept in repo but out of the rotation). Both reel
+paths share one quality-gated script. Verified e2e locally: 5-sentence script →
+4 scenes (short-sentence merge) → 13.7s reel with voice, ducked music, whooshes
+on cuts, cinematic AI images + b-roll. Local dev now uses `.venv` (uv).
+
 ## Build order & verification
 
 1. **E2** ✅ 2026-07-05 — root cause wasn't the local cache (CI runners are

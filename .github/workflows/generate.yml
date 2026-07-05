@@ -47,7 +47,7 @@ jobs:
           from agents.hashtag_agent import HashtagAgent
           from agents.publishing_agent import PublishingAgent
           from agents.voice_reel import VoiceReelAgent
-          from agents.motion_reel import MotionReelAgent
+          from agents.scene_reel import SceneReelAgent
           from agents.broll_agent import BRollAgent
           from agents.music_agent import MusicAgent
           from agents._db import get_ideas, update_idea
@@ -58,7 +58,7 @@ jobs:
           ha = HashtagAgent(config)
           pa = PublishingAgent(config)
           vra = VoiceReelAgent(config)
-          mra = MotionReelAgent(config)
+          sra = SceneReelAgent(config)
           br = BRollAgent(config)
           ma = MusicAgent(config)
 
@@ -77,19 +77,18 @@ jobs:
                   if as_reel:
                       # idea id seeds result rotation so reels don't reuse the same track/footage
                       music = ma.pick_track(idea['hook'], f'{base}/music.mp3', seed=idea['id'])  # CC track or None
+                      # quality gate: score the script, regenerate weak ones.
+                      vs = ca.generate_quality(idea, 'reel', threshold=config.get('quality_threshold', 7))
                       reel = None
-                      if (idea['id'] % 4) == 1:  # ~1 in 4 reels: animated-insight (Remotion motion graphics)
+                      if (idea['id'] % 4) == 1:  # ~1 in 4 reels: ad-style scene reel (Remotion + AI images)
                           try:
-                              vs = ca.generate_quality(idea, 'motion', threshold=config.get('quality_threshold', 7))
-                              reel = mra.build(vs, f'{base}/reel.mp4', idea_id=idea['id'],
-                                               music_path=(music['path'] if music else None))
-                              print('  -> motion reel rendered')
-                          except Exception as me:
-                              print(f'  motion reel failed ({str(me)[:150]}) — falling back to b-roll')
+                              reel = sra.build(vs, f'{base}/reel.mp4', idea_id=idea['id'],
+                                               music_path=(music['path'] if music else None), broll=br)
+                              print('  -> scene reel rendered')
+                          except Exception as se:
+                              print(f'  scene reel failed ({str(se)[:150]}) — falling back to b-roll')
                       if reel is None:
                           # ORIGINAL voiceover reel: script -> edge-tts -> synced captions.
-                          # quality gate: score the script, regenerate weak ones.
-                          vs = ca.generate_quality(idea, 'reel', threshold=config.get('quality_threshold', 7))
                           clips = br.fetch_clips(vs.get('b_roll_terms'), variant=idea['id'])  # moving stock footage ([] if no key)
                           reel = vra.build(vs.get('hook', idea['hook']), vs['script'],
                                            f'{base}/reel.mp4', music_path=(music['path'] if music else None),

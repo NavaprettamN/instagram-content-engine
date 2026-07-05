@@ -37,8 +37,9 @@ research.yml (07:00 UTC daily)
 generate.yml (every 2h)
   approved ideas without generated_content
   → ContentAgent (Gemini JSON) + DesignAgent (Pillow PNGs, 1080×1080)
-  → reels: id%4==1 → Remotion motion-graphics reel (remotion/ + agents/motion_reel.py,
-    music-only kinetic text; falls back to b-roll voice reel on any failure)
+  → reels: id%4==1 → ad-style scene reel (agents/scene_reel.py + remotion/ Scenes:
+    voiceover-paced cuts, Pollinations AI images alternating Pexels b-roll, whoosh
+    SFX; falls back to b-roll voice reel on any failure)
   → PublishingAgent.upload_image_to_hosting() → imgbb public URLs
   → Supabase: status=designed, image_paths=[imgbb URLs]
 
