@@ -79,8 +79,14 @@ is the same capability without a server to babysit. So:
    parrot its own examples. Verified live: same term/mood → different clip md5s
    + different tracks. `JAMENDO_CLIENT_ID` confirmed working (music was never
    silent — just always the same #1 track).
-2. **E1** (config + research prompt + sources) — run research, confirm ideas span
-   ≥3 pillars with `pillar` tags.
+2. **E1** ✅ 2026-07-05 — `content_pillars` (weighted) in config.yaml; niche
+   broadened to "AI, productivity & working smarter"; `ResearchAgent._pillar_plan()`
+   assigns a pillar per idea (weighted random, ≥3 distinct/day) and the prompt
+   forbids rephrasing the last 15 hooks (theme rotation, no new storage).
+   Sources: +lifehacker RSS, +r/getdisciplined, +r/Entrepreneur. Verified: dry
+   run produced habits + side-hustle + AI ideas in one batch. Deferred: `pillar`
+   column in Supabase (needs manual migration) — add when analytics-by-pillar
+   is wanted.
 3. **E3** (Remotion, biggest lift ~1–2 sessions) — render one template locally,
    then in CI, publish one live.
 4. Watch analytics ≥1 week: which pillar/format wins → adjust weights.

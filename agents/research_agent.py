@@ -1,9 +1,10 @@
 import feedparser
+import random
 import requests
 import json
 from datetime import datetime
 from agents._llm import generate_text
-from agents._db import save_idea, get_analytics, get_config
+from agents._db import save_idea, get_analytics, get_config, get_ideas
 from agents.trend_agent import TrendAgent
 
 
@@ -52,6 +53,21 @@ class ResearchAgent:
                 print(f"Error fetching r/{sub}: {e}")
         return ideas
 
+    def _pillar_plan(self, k=5):
+        """Weighted-random pillar per idea; guarantees >=3 distinct pillars a day."""
+        pillars = self.config.get("content_pillars") or []
+        if not pillars:
+            return []
+        names = [p["name"] for p in pillars]
+        picks = random.choices(names, [p.get("weight", 1) for p in pillars], k=k)
+        for i in range(len(picks)):
+            if len(set(picks)) >= min(3, len(names)):
+                break
+            unused = [n for n in names if n not in picks]
+            if unused:
+                picks[i] = unused[0]
+        return picks
+
     def generate_content_ideas(self, trends, reddit_ideas, platform_trends=None):
         research_summary = json.dumps({
             "trending_articles": trends[:10],
@@ -76,13 +92,29 @@ class ResearchAgent:
                 f"{top}\n"
             )
 
+        # Phase E1: spread the day's ideas across content pillars, and don't
+        # rehash an angle we already posted recently.
+        pillar_plan = self._pillar_plan()
+        pillar_lines = ""
+        if pillar_plan:
+            assigned = "\n".join(f"  Idea {i + 1}: {p}" for i, p in enumerate(pillar_plan))
+            pillar_lines = (
+                "\nPILLAR ASSIGNMENT — each idea MUST belong to its assigned pillar "
+                "(this stops the page being one-note):\n" + assigned + "\n"
+            )
+        recent_hooks = [i["hook"] for i in get_ideas()[:15] if i.get("hook")]
+        avoid = (
+            f"\nDo NOT repeat or lightly rephrase these recent angles:\n{json.dumps(recent_hooks)}\n"
+            if recent_hooks else ""
+        )
+
         prompt = f"""You are a content strategist for an Instagram page about {self.niche}.
 
 Here is today's research — trending articles, Reddit, and live platform trends
 (what's getting views/searches RIGHT NOW on YouTube, Google, and TikTok):
 
 {research_summary}
-{learnings}
+{learnings}{pillar_lines}{avoid}
 Based on this research AND your own knowledge, generate exactly 5 Instagram content ideas.
 Lean into the "platform_trends" — riding a currently-surging topic is the single
 biggest reach multiplier. Tie ideas to those trends wherever it's genuinely relevant.
@@ -144,3 +176,15 @@ Prioritize HIGH engagement potential. Avoid generic advice. Every tip must be sp
 
         print(f"Research Agent: {len(saved_ids)} new ideas added to review queue")
         return ideas
+
+
+if __name__ == "__main__":
+    # ponytail: offline self-check of the pillar rotation (no network/LLM).
+    import yaml
+    cfg = yaml.safe_load(open("config.yaml"))
+    a = ResearchAgent(cfg)
+    for _ in range(20):
+        plan = a._pillar_plan()
+        assert len(plan) == 5 and len(set(plan)) >= 3, plan
+    assert ResearchAgent({**cfg, "content_pillars": []})._pillar_plan() == []
+    print("pillar plan self-check OK —", a._pillar_plan())

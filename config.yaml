@@ -1,5 +1,5 @@
 # ── Content Strategy ──────────────────────────────────────────────
-niche: "AI Productivity Tools"
+niche: "AI, productivity & working smarter"
 instagram_handle: "@contentengine2"
 keywords:
   - "AI tools"
@@ -7,6 +7,15 @@ keywords:
   - "automation"
   - "ChatGPT tips"
   - "work smarter"
+
+# Content pillars (Phase E1): research spreads each day's 5 ideas across these,
+# weighted. Keeps the account from being 100% AI-topic (caps reach).
+content_pillars:
+  - { name: "AI tools & workflows", weight: 4 }
+  - { name: "productivity systems & habits (no AI needed)", weight: 2 }
+  - { name: "making money / side-hustles with tech", weight: 2 }
+  - { name: "contrarian takes & myth-busting about hustle culture or AI", weight: 1 }
+  - { name: "relatable work-life truths & memeable observations", weight: 1 }
 
 brand_voice: >
   Conversational and slightly witty. Uses short, punchy sentences.
@@ -20,12 +29,15 @@ rss_feeds:
   - "https://techcrunch.com/category/artificial-intelligence/feed/"
   - "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
   - "https://feeds.feedburner.com/TheHackersNews"
+  - "https://lifehacker.com/rss"   # non-AI productivity (pillar 2)
 
 subreddits:
   - "artificial"
   - "productivity"
   - "SideProject"
   - "ChatGPT"
+  - "getdisciplined"   # habits pillar
+  - "Entrepreneur"     # money pillar
 
 # ── Design ────────────────────────────────────────────────────────
 brand_colors:
