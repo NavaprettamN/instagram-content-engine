@@ -87,7 +87,11 @@ What ad-grade faceless reels actually have, and the free path to each:
 Build: new `Scenes` composition in remotion/ (props = per-scene {image, headline,
 start, dur} from TTS timings); `agents/scene_reel.py` = script → TTS → image
 prompts → nano banana → remotion render → mux voice+music+SFX. Replaces the
-v1 templates in the `id % 4 == 1` slot (KineticList/BigStat stay as fallback #1).
+v1 templates. **2026-07-06: scene reel is now the DEFAULT for EVERY reel** —
+dropped the `id % 4 == 1` gate. User kept seeing the old b-roll type because the
+queued ids (94/95) never hit that gate and they only liked the scene format;
+b-roll voice reel stays as the render-failure fallback. KineticList/BigStat kept
+in repo, out of rotation.
 
 Paid "think big" option (user decision, not default): Veo 3 via Gemini API
 (~$0.35+/s) or Runway for true generated video — revisit only if v2 + analytics
