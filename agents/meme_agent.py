@@ -16,7 +16,6 @@ import requests
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 W, H = 1080, 1920
-SECONDS_EACH = 3.0
 IMG_EXT = (".jpg", ".jpeg", ".png", ".webp")
 # Reddit blocks unauthenticated JSON (403) from most IPs now; meme-api.com is a
 # free, keyless proxy that returns top image posts from a subreddit as JSON.
@@ -29,6 +28,7 @@ class MemeAgent:
         self.subreddits = self.config.get("meme_subreddits",
                                           ["memes", "wholesomememes", "MemeEconomy"])
         self.min_score = self.config.get("meme_min_score", 2000)
+        self.seconds_each = self.config.get("meme_seconds_each", 6)
         self.cache = os.path.join(self.config.get("output_dir", "./generated_content"), "memes")
         os.makedirs(self.cache, exist_ok=True)
         self.font = self.config.get("font_bold", "./fonts/Inter-Bold.ttf")
@@ -129,13 +129,13 @@ class MemeAgent:
         if not frames:
             raise RuntimeError("no meme frames composed")
 
-        # ffmpeg concat of stills, each held SECONDS_EACH, + optional music bed
+        # ffmpeg concat of stills, each held self.seconds_each, + optional music bed
         listfile = os.path.join(self.cache, "frames.txt")
         with open(listfile, "w") as f:
             for fp in frames:
-                f.write(f"file '{os.path.abspath(fp)}'\nduration {SECONDS_EACH}\n")
+                f.write(f"file '{os.path.abspath(fp)}'\nduration {self.seconds_each}\n")
             f.write(f"file '{os.path.abspath(frames[-1])}'\n")  # concat demuxer needs last repeated
-        total = SECONDS_EACH * len(frames)
+        total = self.seconds_each * len(frames)
 
         vfilter = ("scale=1080:1920:force_original_aspect_ratio=increase,"
                    "crop=1080:1920,setsar=1,fps=30,format=yuv420p")

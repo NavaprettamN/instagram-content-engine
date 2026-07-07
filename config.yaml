@@ -144,4 +144,5 @@ meme_subreddits:
   - "wholesomememes"
   - "MemeEconomy"
 meme_min_score: 2000
-memes_per_reel: 4
+memes_per_reel: 1        # one meme per reel — held long enough to read (was a fast 4-up dump)
+meme_seconds_each: 6     # seconds each meme is on screen

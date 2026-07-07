@@ -30,9 +30,17 @@ def main():
         return
 
     base = config["output_dir"]
-    # upbeat CC music bed (seed by first meme id so consecutive reels differ)
-    music = MusicAgent(config).pick_track("funny memes", f"{base}/meme_music.mp3",
-                                          seed=abs(hash(memes[0]["id"])) % 997)
+    # upbeat CC music bed. A persistent counter walks the track pool so tracks
+    # cycle (0,1,2,...) instead of a random seed that can coincidentally repeat.
+    seed = int(get_config("meme_music_seed") or 0)
+    set_config("meme_music_seed", seed + 1)
+    # Rotate BOTH genre and track by the persistent counter so meme music stays
+    # varied and upbeat (the mood tags' all-time-popular pool is classical piano —
+    # wrong vibe for memes; these genres on popularity_month are energetic).
+    genres = ["pop", "electronic", "funk", "dance", "happy"]
+    music = MusicAgent(config).pick_track(
+        "meme", f"{base}/meme_music.mp3", seed=seed,
+        tags=genres[seed % len(genres)], order="popularity_month")
     reel = agent.build_reel(memes, f"{base}/meme_reel.mp4",
                             music_path=(music["path"] if music else None))
     url = upload_video(reel)

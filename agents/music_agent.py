@@ -39,7 +39,7 @@ class MusicAgent:
         except Exception:
             return self.default_tag
 
-    def _query(self, tags, seed=0):
+    def _query(self, tags, seed=0, order="popularity_total"):
         """Return a downloadable instrumental for a tag, rotated by seed, or None.
 
         limit=1 + popularity order gave every reel the same #1 track per mood;
@@ -47,7 +47,7 @@ class MusicAgent:
         """
         params = {"client_id": self.client_id, "format": "json", "limit": 20,
                   "audioformat": "mp32", "vocalinstrumental": "instrumental",
-                  "order": "popularity_total", "audiodownload_allowed": "true"}
+                  "order": order, "audiodownload_allowed": "true"}
         if tags:
             params["tags"] = tags
         r = requests.get(BASE, params=params, timeout=20)
@@ -55,14 +55,22 @@ class MusicAgent:
         results = r.json().get("results", [])
         return results[seed % len(results)] if results else None
 
-    def pick_track(self, hook, out_path, seed=0):
-        """Download a mood-matching CC instrumental. Returns {'path','credit'} or None."""
+    def pick_track(self, hook, out_path, seed=0, tags=None, order="popularity_total"):
+        """Download a CC instrumental. Returns {'path','credit'} or None.
+
+        Default: LLM mood tag from `hook`. Pass explicit `tags` (e.g. a genre) +
+        `order` to bypass the mood picker — used for meme reels, where genre tags
+        like 'pop' on popularity_month give varied, energetic tracks instead of
+        the classical piano that dominates the mood tags' all-time popularity.
+        """
         if not self.client_id:
             return None
         try:
-            # progressively relax: LLM mood -> default mood -> any instrumental
-            for tags in (self._mood_tag(hook), self.default_tag, ""):
-                t = self._query(tags, seed=seed)
+            # explicit tags override the LLM mood; else relax LLM -> default -> any
+            candidates = ((tags, self.default_tag, "") if tags
+                          else (self._mood_tag(hook), self.default_tag, ""))
+            for tg in candidates:
+                t = self._query(tg, seed=seed, order=order)
                 if t:
                     break
             audio_url = t.get("audiodownload") or t.get("audio") if t else None
