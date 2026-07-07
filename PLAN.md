@@ -112,6 +112,16 @@ Verified in CI after two real fixes (font delayRender raced 10s + 120s render
 timeout; SFX input-index bug that only hit when music was present): idea 85
 rendered as a 12.6s scene reel, hosted, **published live** IG `18138048202515156`
 (instagram.com/reel/DaazEL0k7Tw).
+- 2026-07-06/07: scene reel promoted to the DEFAULT for every reel (was 1-in-4;
+  user kept getting the old b-roll type). Two real bugs found + fixed while
+  verifying: (1) render hang — Remotion mocks setTimeout during pre-render so
+  the font-load timeout race never fired; a stalled network font fetch on a busy
+  runner hung delayRender 118s and failed the whole render. Fixed by embedding
+  Inter as base64 @font-face (`remotion/src/fonts.css` + `scripts/build_fonts_css.py`),
+  no network fetch. (2) scene-plan JSON failures on the Groq fallback now degrade
+  to a plan derived from the script sentences instead of dropping to b-roll; +1
+  retry on Pollinations 500s. Verified in CI: ideas 94 and 95 (both would have
+  been b-roll before) now render as scene reels.
 
 ## Build order & verification
 
