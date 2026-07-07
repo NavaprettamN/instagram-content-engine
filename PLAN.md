@@ -149,11 +149,12 @@ LLM ideas so they bypass research→generate→publish):
   post time).
 - Copyright hygiene: credit overlay + only meme subreddits + capped volume.
 
-**F2 — Notification-publish (trending audio)** — new `meme.yml` cron:
-fetch → build → host to Supabase (public URL) → `notify.send()` with the video
-URL + caption. It NEVER calls the publish API, so it IS the notification-publish
-model: phone ping → you download → post in-app with trending audio (~20s). Reuses
-existing ntfy wiring.
+**F2 — Auto-publish** — new `meme.yml` cron: fetch → build (embedded CC music)
+→ host to Supabase → `PublishingAgent.publish_reel()` → live, then ntfy "posted"
+ping. **User chose full auto-publish over notification-publish (2026-07-07)** —
+the manual download+post step wasn't worth the trending-audio bump for a
+volume-driven meme account. Trending audio can't be attached via API (that's the
+trade). Notification-publish code was replaced, not kept.
 
 **F3 — Pillar rebalance** — drop AI to a minor pillar; make psychology + money
 the auto value pillars alongside the manual meme reels.

@@ -1,8 +1,9 @@
-name: Meme Reel — build + notify (you add trending audio)
+name: Meme Reel — build + auto-publish
 
-# Builds a Reddit meme-dump reel and pings your phone to post it with native
-# Instagram trending audio (API can't attach audio, so this stays notification-
-# publish). Runs a couple times a day; skips cleanly if nothing fresh.
+# Builds a Reddit meme-dump reel (embedded CC music) and auto-publishes it to
+# Instagram — fully hands-off. Runs a couple times a day; skips cleanly if
+# nothing fresh. (Trending audio can't be attached via the API — the trade for
+# zero manual work.)
 on:
   schedule:
     - cron: "0 6,15 * * *"  # 06:00 & 15:00 UTC
@@ -24,11 +25,15 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: Build meme reel and notify
+      - name: Build meme reel and publish
         env:
-          SUPABASE_URL:    ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY:    ${{ secrets.SUPABASE_KEY }}
-          NTFY_TOPIC:      ${{ secrets.NTFY_TOPIC }}
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          SLACK_WEBHOOK:   ${{ secrets.SLACK_WEBHOOK }}
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+          IMGBB_API_KEY:     ${{ secrets.IMGBB_API_KEY }}
+          JAMENDO_CLIENT_ID: ${{ secrets.JAMENDO_CLIENT_ID }}
+          SUPABASE_URL:      ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:      ${{ secrets.SUPABASE_KEY }}
+          NTFY_TOPIC:        ${{ secrets.NTFY_TOPIC }}
+          DISCORD_WEBHOOK:   ${{ secrets.DISCORD_WEBHOOK }}
+          SLACK_WEBHOOK:     ${{ secrets.SLACK_WEBHOOK }}
         run: python -m scripts.post_meme
