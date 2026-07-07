@@ -68,8 +68,9 @@ class SceneReelAgent:
         """One LLM call: per sentence, an on-screen headline + a cinematic image
         prompt + a stock-video search term."""
         numbered = "\n".join(f"{i+1}. {s}" for i, (_, _, s) in enumerate(sentences))
-        plan = generate_text(
-            f"""You are art-directing a fast-cut vertical video ad. For EACH narration
+        try:
+            plan = generate_text(
+                f"""You are art-directing a fast-cut vertical video ad. For EACH narration
 line below, design its full-screen scene.
 
 NARRATION LINES:
@@ -81,29 +82,46 @@ Return JSON: {{"scenes": [{{
   "video_term": "2-4 word stock-footage search phrase for the same beat"
 }}, ...]}}
 Exactly {len(sentences)} scenes, in order. Vary subjects/settings between scenes.""",
-            system="Expert short-form video art director. Return only valid JSON.",
-            json_response=True, temperature=0.7,
-        )
-        scenes = plan.get("scenes", []) if isinstance(plan, dict) else []
-        # pad/trim defensively so zip never drops a sentence
+                system="Expert short-form video art director. Return only valid JSON.",
+                json_response=True, temperature=0.7,
+            )
+            scenes = plan.get("scenes", []) if isinstance(plan, dict) else []
+        except Exception as e:
+            # Weaker fallback LLMs (Groq) sometimes emit invalid JSON for this
+            # nested shape. A degraded plan built from the sentences themselves
+            # still renders a real reel — far better than dropping to b-roll.
+            print(f"SceneReel: scene plan JSON failed ({str(e)[:80]}) — deriving from script")
+            scenes = []
+        # pad/trim + backfill each scene from its sentence so nothing is empty
         while len(scenes) < len(sentences):
             scenes.append({})
-        return scenes[:len(sentences)]
+        out = []
+        for (_, _, sent), sc in zip(sentences, scenes):
+            sc = sc if isinstance(sc, dict) else {}
+            sc.setdefault("headline", " ".join(sent.split()[:5]))
+            sc.setdefault("image_prompt", sent)
+            sc.setdefault("video_term", " ".join(sent.split()[:3]))
+            out.append(sc)
+        return out
 
     # ── visuals ────────────────────────────────────────────────────
     def _ai_image(self, prompt, dest, style):
-        """Pollinations (free, keyless). Returns dest or None."""
+        """Pollinations (free, keyless). Returns dest or None. Retries once on
+        the transient 500s the free endpoint throws under load."""
         url = POLLINATIONS + urllib.parse.quote(f"{prompt}, {style}")
-        try:
-            r = requests.get(url, params={"width": 1080, "height": 1920, "nologo": "true",
-                                          "model": "flux"}, timeout=90)
-            r.raise_for_status()
-            if len(r.content) > 10_000:
-                with open(dest, "wb") as f:
-                    f.write(r.content)
-                return dest
-        except Exception as e:
-            print(f"SceneReel: image gen failed ({str(e)[:100]})")
+        for attempt in range(2):
+            try:
+                r = requests.get(url, params={"width": 1080, "height": 1920, "nologo": "true",
+                                              "model": "flux"}, timeout=90)
+                r.raise_for_status()
+                if len(r.content) > 10_000:
+                    with open(dest, "wb") as f:
+                        f.write(r.content)
+                    return dest
+            except Exception as e:
+                print(f"SceneReel: image gen failed ({str(e)[:100]})")
+                if attempt == 0:
+                    time.sleep(4)
         return None
 
     # ── build ──────────────────────────────────────────────────────
