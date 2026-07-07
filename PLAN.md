@@ -123,6 +123,44 @@ rendered as a 12.6s scene reel, hosted, **published live** IG `18138048202515156
   retry on Pollinations 500s. Verified in CI: ideas 94 and 95 (both would have
   been b-roll before) now render as scene reels.
 
+## ▶ Phase F — Meme pivot + trending-audio publishing (2026-07-07, user-chosen)
+
+User decisions after research: (1) pivot niche to **Reddit meme reels + 1-2 value
+pillars** (AI-only is boring/capped); (2) **notification-publish** path so reels
+can carry native Instagram trending audio (API cannot attach it — see
+[[instagram-music-api-constraint]]).
+
+Key research facts:
+- IG trending/licensed audio CANNOT be attached via the Content Publishing API
+  (confirmed 2026). Only pre-embedded audio, or a human taps "add sound" at post
+  time. Top faceless repos (RedditVideoMakerBot, ReelsMaker) also don't use
+  trending audio — their edge is the *format*, not a music trick.
+- Highest-reach faceless niches 2026: finance (top CPM), psychology, motivation,
+  curiosity/facts, memes (top raw share/reach).
+
+**F1 — Meme reel pipeline** (`agents/meme_agent.py`, standalone — memes aren't
+LLM ideas so they bypass research→generate→publish):
+- Fetch top image posts from `meme_subreddits` (reuse Reddit JSON; filter to
+  direct image urls, skip NSFW/`over_18`, min score); track seen ids via
+  `set_config`/`get_config` so nothing repeats.
+- Compose each meme with PIL onto 1080×1920 (blurred cover bg + centered meme +
+  `via u/author` credit) → "meme-dump" reel: N memes × ~3s, ffmpeg slideshow +
+  CC music bed (music is only a placeholder — user swaps to trending audio at
+  post time).
+- Copyright hygiene: credit overlay + only meme subreddits + capped volume.
+
+**F2 — Notification-publish (trending audio)** — new `meme.yml` cron:
+fetch → build → host to Supabase (public URL) → `notify.send()` with the video
+URL + caption. It NEVER calls the publish API, so it IS the notification-publish
+model: phone ping → you download → post in-app with trending audio (~20s). Reuses
+existing ntfy wiring.
+
+**F3 — Pillar rebalance** — drop AI to a minor pillar; make psychology + money
+the auto value pillars alongside the manual meme reels.
+
+Verification: build one meme-dump reel locally (play it), confirm credits +
+music; dry-run meme.yml → confirms notify fires with a real Supabase URL.
+
 ## Build order & verification
 
 1. **E2** ✅ 2026-07-05 — root cause wasn't the local cache (CI runners are

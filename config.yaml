@@ -1,5 +1,5 @@
 # ── Content Strategy ──────────────────────────────────────────────
-niche: "AI, productivity & working smarter"
+niche: "psychology, money & self-improvement (work smarter, think sharper)"
 instagram_handle: "@contentengine2"
 keywords:
   - "AI tools"
@@ -8,14 +8,16 @@ keywords:
   - "ChatGPT tips"
   - "work smarter"
 
-# Content pillars (Phase E1): research spreads each day's 5 ideas across these,
-# weighted. Keeps the account from being 100% AI-topic (caps reach).
+# Content pillars (Phase E1/F3): research spreads each day's ideas across these,
+# weighted. Rebalanced 2026-07-07 away from AI-primary (boring/capped) — the
+# auto value posts now lead with psychology + money (highest reach + CPM). Meme
+# reels are a separate pipeline (meme.yml), not an idea pillar.
 content_pillars:
-  - { name: "AI tools & workflows", weight: 4 }
-  - { name: "productivity systems & habits (no AI needed)", weight: 2 }
-  - { name: "making money / side-hustles with tech", weight: 2 }
-  - { name: "contrarian takes & myth-busting about hustle culture or AI", weight: 1 }
-  - { name: "relatable work-life truths & memeable observations", weight: 1 }
+  - { name: "psychology & mind hacks (why people behave the way they do)", weight: 3 }
+  - { name: "making money / side-hustles / smart personal finance", weight: 3 }
+  - { name: "productivity systems & habits", weight: 2 }
+  - { name: "curiosity: surprising facts & 'did you know'", weight: 2 }
+  - { name: "AI tools & workflows", weight: 1 }
 
 brand_voice: >
   Conversational and slightly witty. Uses short, punchy sentences.
@@ -32,12 +34,13 @@ rss_feeds:
   - "https://lifehacker.com/rss"   # non-AI productivity (pillar 2)
 
 subreddits:
-  - "artificial"
+  - "getdisciplined"     # habits / productivity
   - "productivity"
-  - "SideProject"
-  - "ChatGPT"
-  - "getdisciplined"   # habits pillar
-  - "Entrepreneur"     # money pillar
+  - "Entrepreneur"       # money pillar
+  - "personalfinance"    # money pillar
+  - "LifeProTips"        # curiosity / value
+  - "todayilearned"      # curiosity: surprising facts
+  - "ChatGPT"            # AI (now minor)
 
 # ── Design ────────────────────────────────────────────────────────
 brand_colors:
@@ -131,3 +134,14 @@ quality_threshold: 7
 #   GEMINI_API_KEY, META_ACCESS_TOKEN, INSTAGRAM_USER_ID,
 #   META_APP_ID, META_APP_SECRET, IMGBB_API_KEY,
 #   SUPABASE_URL, SUPABASE_KEY
+
+# ── Meme reels (Phase F) ──────────────────────────────────────────
+# Standalone meme-dump reels from Reddit, published via notification (meme.yml)
+# so you add native Instagram trending audio at post time. Music baked in is a
+# placeholder. Keep to meme subreddits; credits are overlaid + in the caption.
+meme_subreddits:
+  - "memes"
+  - "wholesomememes"
+  - "MemeEconomy"
+meme_min_score: 2000
+memes_per_reel: 4

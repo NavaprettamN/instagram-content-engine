@@ -1,0 +1,34 @@
+name: Meme Reel — build + notify (you add trending audio)
+
+# Builds a Reddit meme-dump reel and pings your phone to post it with native
+# Instagram trending audio (API can't attach audio, so this stays notification-
+# publish). Runs a couple times a day; skips cleanly if nothing fresh.
+on:
+  schedule:
+    - cron: "0 6,15 * * *"  # 06:00 & 15:00 UTC
+  workflow_dispatch:
+
+jobs:
+  meme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - run: pip install -r requirements.txt
+
+      - name: Build meme reel and notify
+        env:
+          SUPABASE_URL:    ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:    ${{ secrets.SUPABASE_KEY }}
+          NTFY_TOPIC:      ${{ secrets.NTFY_TOPIC }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          SLACK_WEBHOOK:   ${{ secrets.SLACK_WEBHOOK }}
+        run: python -m scripts.post_meme
