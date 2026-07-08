@@ -8,8 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the Streamlit dashboard (local dev)
-streamlit run dashboard.py
+# Web dashboard (Next.js, replaces the old Streamlit app) — see dashboard-web/README.md
+cd dashboard-web && npm install && npm run dev   # http://localhost:3000
 
 # One-shot full pipeline (research → generate → publish ONE post)
 python -m scripts.autopilot

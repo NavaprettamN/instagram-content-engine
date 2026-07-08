@@ -162,6 +162,26 @@ the auto value pillars alongside the manual meme reels.
 Verification: build one meme-dump reel locally (play it), confirm credits +
 music; dry-run meme.yml → confirms notify fires with a real Supabase URL.
 
+## ▶ Phase G — Web dashboard rebuild (2026-07-08, user-chosen)
+
+User: replace the unauthenticated Streamlit app with a "proper app" + Google
+auth. Ruled out GitHub Pages (static — would leak the Supabase service key in
+client JS, can't run server logic). Chose Vercel + Next.js + Google login.
+
+Built `dashboard-web/` (Next.js 15 App Router, Auth.js v5 Google login locked
+to `ALLOWED_EMAILS`, Supabase read server-side via REST fetch so the service key
+never reaches the browser, hand-rolled SVG chart + zero heavy deps). Pages:
+Overview (followers/top-posts/AI analysis), Content Queue, Controls (trigger any
+workflow via GitHub workflow_dispatch, gated behind login + GH_PAT). Verified:
+`next build` clean; runtime smoke — /login renders, protected routes 307→/login
+signed out, /api/trigger 401 without session (needed `trustHost: true`).
+Old Streamlit `dashboard.py` deleted; `streamlit` dropped from requirements.
+
+**User action needed to go live** (see dashboard-web/README.md): create a Google
+OAuth client + a Vercel project (root dir `dashboard-web`), set env vars
+(AUTH_SECRET, AUTH_GOOGLE_ID/SECRET, ALLOWED_EMAILS, SUPABASE_URL/KEY, optional
+GH_PAT+GH_REPO).
+
 ## Build order & verification
 
 1. **E2** ✅ 2026-07-05 — root cause wasn't the local cache (CI runners are
