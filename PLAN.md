@@ -182,6 +182,18 @@ OAuth client + a Vercel project (root dir `dashboard-web`), set env vars
 (AUTH_SECRET, AUTH_GOOGLE_ID/SECRET, ALLOWED_EMAILS, SUPABASE_URL/KEY, optional
 GH_PAT+GH_REPO).
 
+## Cleanup — old AI posts (2026-07-08)
+
+User wants pre-pivot AI posts removed. **Finding: the Instagram Login API cannot
+delete media** — verified by DELETE on a real existing post → "Unsupported delete
+request ... does not support this operation" (graph.instagram.com); our IGAA
+token is also rejected on graph.facebook.com. Deletion needs the Facebook-login
+Instagram API (Page token), which the project avoids. So auto-delete is out.
+`scripts/cleanup_old_posts.py` instead scans all media, scores captions for AI
+themes (weighted keywords, threshold 3), and writes a newest-first checklist
+with permalinks for **manual** in-app deletion. First run: flagged 28 of 43
+posts. Classifier self-check (`--selfcheck`) passes.
+
 ## Build order & verification
 
 1. **E2** ✅ 2026-07-05 — root cause wasn't the local cache (CI runners are

@@ -31,3 +31,4 @@ yarn-error.log*
 *.tmp
 *.log
 remotion/public/gen/
+ai_posts_to_delete.md
