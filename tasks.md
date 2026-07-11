@@ -4,11 +4,49 @@ Synced from Notion "Let's Ship" → Tasks database (linked to Instagram Content 
 
 ---
 
-## 📊 Current Status (updated 2026-06-30)
+## 📊 Current Status (updated 2026-07-11)
 
-> **Goal: make money** — grow reach/followers → monetize. See `PLAN.md` for the
-> active content-quality + "proper machine" plan. Update this file at the end of
-> every work session (mandated in CLAUDE.md).
+> **Goal: make money** — grow reach/followers → monetize. Update this file at
+> the end of every work session (mandated in CLAUDE.md).
+
+### 🎯 Phase H (2026-07-11): memes-only pivot — AI-content pipeline REMOVED
+User decision: the page is a **Reddit meme account only**. Despite the F3
+pillar rebalance, AI carousels/reels kept posting; removed the whole
+AI/value-content machine instead of tuning it:
+- Deleted workflows: `research.yml`, `generate.yml`, `publish.yml`, `clip.yml`,
+  `story.yml`, `autopilot.yml`.
+- Deleted agents: research, trend, content, design, hashtag, broll, clip,
+  scene/voice/motion reel, video, `_captions` + `remotion/` renderer +
+  `orchestrator.py` + scripts `autopilot.py`, `clip_publish.py`, `post_story.py`.
+- Kept: `meme.yml` (build + auto-publish meme reels 2×/day), `comment_reply.yml`,
+  `analytics.yml`, `linkbio.yml`, `refresh_token.yml`.
+- `config.yaml` trimmed to meme/brand/funnel keys; niche + brand voice now
+  meme-account; `requirements.txt` cut to what's still imported.
+- Supabase `content_ideas` is legacy (nothing writes to it); dashboard Approval
+  Center now has no pipeline behind it — candidate for cleanup.
+
+### ✅ Done & running (current machine)
+- **Meme reels** — Reddit memes (meme-api.com) → 6s one-meme reels, upbeat CC
+  music rotation, dedupe via `config.seen_memes`, auto-publish 06:00 & 15:00 UTC.
+- **Comment auto-reply**, **weekly analytics**, **link-in-bio funnel**
+  (affiliate + lead magnet + Gumroad product), **token auto-refresh**.
+
+### 🔄 In progress / needs attention
+- **Watch meme performance** — analytics is now purely about meme reels; tune
+  `meme_subreddits`, cadence (maybe 3×/day), and posting hours from the weekly report.
+- **Funnel mismatch** — link-in-bio still sells "AI Productivity" assets to a
+  meme audience; decide whether to re-theme the funnel or leave it.
+- **Dashboard cleanup** — Approval Center / idea views are dead now the idea
+  pipeline is gone; simplify dashboard-web around published posts + analytics.
+- **Notification channel** — wire the chosen secret (ntfy topic / Discord / Slack webhook).
+
+### ⬜ Pending
+- #11 Media kit, #12 Sponsored slots (audience-gated — need reach to matter).
+- #13–15 Scale (multi-account, cross-platform, SaaS).
+
+---
+
+## Historical status (pre-pivot, for context)
 
 ### ✅ Done & running
 - **Full content engine** — research (trends) → auto-approve → quality-gate → generate → publish, all on GitHub Actions cron.

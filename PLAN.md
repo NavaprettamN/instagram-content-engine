@@ -5,6 +5,18 @@
 
 ---
 
+# ▶ Phase H — Memes-only pivot (2026-07-11, user-chosen) — SHIPPED
+
+User: AI carousels/reels kept posting despite the F3 rebalance; decision is the
+page is **Reddit memes only**. Removed the entire AI/value-content pipeline
+(research/generate/publish/clip/story workflows, their agents, remotion/,
+orchestrator.py); `meme.yml` is now the only content pipeline. Support crons
+kept: comment replies, weekly analytics, link-in-bio, token refresh. Everything
+below about carousels/scene reels/clips is historical. Details in `tasks.md`
+Phase H entry.
+
+---
+
 # ▶ ACTIVE: Phase E — Variety + Motion (2026-07-05)
 
 Phases A–C below shipped and the machine runs daily. New user feedback:

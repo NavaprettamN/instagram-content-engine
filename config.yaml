@@ -1,48 +1,16 @@
 # ── Content Strategy ──────────────────────────────────────────────
-niche: "psychology, money & self-improvement (work smarter, think sharper)"
+# The page is a Reddit meme account. The old AI/value-post pipeline
+# (research → generate → publish) was removed 2026-07-11; meme.yml is the
+# only content pipeline.
+niche: "memes & relatable humor"
 instagram_handle: "@contentengine2"
-keywords:
-  - "AI tools"
-  - "productivity apps"
-  - "automation"
-  - "ChatGPT tips"
-  - "work smarter"
-
-# Content pillars (Phase E1/F3): research spreads each day's ideas across these,
-# weighted. Rebalanced 2026-07-07 away from AI-primary (boring/capped) — the
-# auto value posts now lead with psychology + money (highest reach + CPM). Meme
-# reels are a separate pipeline (meme.yml), not an idea pillar.
-content_pillars:
-  - { name: "psychology & mind hacks (why people behave the way they do)", weight: 3 }
-  - { name: "making money / side-hustles / smart personal finance", weight: 3 }
-  - { name: "productivity systems & habits", weight: 2 }
-  - { name: "curiosity: surprising facts & 'did you know'", weight: 2 }
-  - { name: "AI tools & workflows", weight: 1 }
 
 brand_voice: >
-  Conversational and slightly witty. Uses short, punchy sentences.
-  Speaks like a knowledgeable friend who's genuinely excited about
-  tech but doesn't talk down to people. Uses data and specific
-  examples over vague claims. Occasionally uses humor but never
-  at the audience's expense. Avoids corporate buzzwords.
-
-# ── Content Sources ───────────────────────────────────────────────
-rss_feeds:
-  - "https://techcrunch.com/category/artificial-intelligence/feed/"
-  - "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
-  - "https://feeds.feedburner.com/TheHackersNews"
-  - "https://lifehacker.com/rss"   # non-AI productivity (pillar 2)
-
-subreddits:
-  - "getdisciplined"     # habits / productivity
-  - "productivity"
-  - "Entrepreneur"       # money pillar
-  - "personalfinance"    # money pillar
-  - "LifeProTips"        # curiosity / value
-  - "todayilearned"      # curiosity: surprising facts
-  - "ChatGPT"            # AI (now minor)
+  Casual, funny, and relatable. Short punchy replies, meme-culture fluent,
+  never corporate. Jokes with the audience, never at their expense.
 
 # ── Design ────────────────────────────────────────────────────────
+# Used by MemeAgent for text overlays on the reel.
 brand_colors:
   background:    "#1a1a2e"
   secondary_bg:  "#16213e"
@@ -96,49 +64,22 @@ affiliate:
     - { emoji: "🔎", name: "Perplexity", url: "https://www.perplexity.ai", blurb: "AI search with real sources" }
     - { emoji: "🎬", name: "CapCut",   url: "https://www.capcut.com",    blurb: "Auto-caption & edit reels fast" }
 
-# ── Reels ─────────────────────────────────────────────────────────
-# Format mix is 2 reels : 1 carousel (set in generate.yml via id % 3).
-# Reels get more reach; the standout performers are the YouTube CC clips (clip.yml).
-reel_seconds_per_slide: 2.5
-reel_voice: "en-US-AriaNeural"   # free edge-tts neural voice for original reels
-clip_source: "vimeo"   # vimeo (cookie-free, CI-friendly) or youtube (needs residential IP/proxy)
-# Reels: YouTube clips are blocked from CI (datacenter IP). Until a working clip
-# source is chosen, generate.yml makes the reels (voiceover reels). Flip false
-# once clips run from a residential IP / proxy / Vimeo.
-generate_reels: true
+# ── Audience ──────────────────────────────────────────────────────
+# meme.yml cron is in UTC; slots are tuned to this timezone's active hours.
+# AnalyticsAgent's weekly report suggests better hours once it has data.
+audience_timezone: "Asia/Kolkata"
+
 # Fallback Jamendo mood tags if the LLM mood pick fails (needs JAMENDO_CLIENT_ID).
 reel_music_tags: "upbeat,corporate"
-
-# ── Publishing Schedule ───────────────────────────────────────────
-# publish.yml cron is in UTC. Pick UTC slots that land in your audience's
-# active hours (this timezone). Once analytics has data, AnalyticsAgent
-# reports the best-performing hours so these can be tuned.
-audience_timezone: "Asia/Kolkata"
-trend_region: "IN"   # YouTube trending region (ISO 3166)
-posting_times:
-  - "08:00"
-  - "14:00"
-  - "20:00"
-posts_per_day: 3
-# Daily content mix (publish.yml enforces this per UTC day; sum = posts/day).
-daily_mix:
-  reel: 2
-  carousel: 1
-# Quality gate: generated content scoring below this (1-10) is regenerated.
-quality_threshold: 7
 
 # ── Secrets ───────────────────────────────────────────────────────
 # All API keys and tokens are loaded from environment variables (.env locally,
 # GitHub Actions secrets in CI). Do NOT add secrets here.
-# Required env vars:
-#   GEMINI_API_KEY, META_ACCESS_TOKEN, INSTAGRAM_USER_ID,
-#   META_APP_ID, META_APP_SECRET, IMGBB_API_KEY,
-#   SUPABASE_URL, SUPABASE_KEY
 
 # ── Meme reels (Phase F) ──────────────────────────────────────────
-# Standalone meme-dump reels from Reddit, published via notification (meme.yml)
-# so you add native Instagram trending audio at post time. Music baked in is a
-# placeholder. Keep to meme subreddits; credits are overlaid + in the caption.
+# Reddit meme reels with an embedded CC music bed, auto-published by meme.yml.
+# (Native trending audio can't be attached via the API.) Keep to meme
+# subreddits; credits are overlaid + in the caption.
 meme_subreddits:
   - "memes"
   - "wholesomememes"

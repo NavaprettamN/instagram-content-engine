@@ -1,14 +1,7 @@
 requests
-numpy
-pandas
 python-dotenv
 pyyaml
-feedparser
 Pillow
 google-genai
 supabase
-pytrends
-yt-dlp
-faster-whisper
 fpdf2
-edge-tts
