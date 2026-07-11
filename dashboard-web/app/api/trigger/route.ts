@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 // Kicks off a GitHub Actions workflow via workflow_dispatch. Requires a GH PAT
 // with `workflow` scope in GH_PAT. Auth-gated to the signed-in dashboard user.
 const ALLOWED = new Set([
-  "research.yml", "generate.yml", "publish.yml", "meme.yml", "analytics.yml",
+  "meme.yml", "comment_reply.yml", "analytics.yml", "linkbio.yml",
 ]);
 
 export async function POST(req: Request) {

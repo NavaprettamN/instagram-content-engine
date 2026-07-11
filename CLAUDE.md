@@ -49,8 +49,8 @@ analytics.yml (Sunday 20:00 UTC)
   Meta media insights → Gemini weekly analysis → Supabase: analytics_snapshots
 
 linkbio.yml (daily 06:00 UTC)
-  scripts/build_linkbio.py → GitHub Pages link-in-bio (latest post, lead magnet,
-  affiliate tools page, Gumroad product)
+  scripts/build_linkbio.py → GitHub Pages link-in-bio (meme page: latest reel +
+  follow; the AI-themed funnel pages were removed 2026-07-11)
 
 refresh_token.yml (monthly)
   scripts/refresh_token.py → refreshes the IGAA token into repo secrets
@@ -100,7 +100,7 @@ Also add new env vars to the Environment variables list above when introduced.
 
 ### config.yaml
 
-Non-secret runtime config: niche, brand voice, brand colors, fonts, output dir, meme subreddits/timing, link-in-bio + affiliate content. Secrets are never put here. The dashboard Settings page writes back to this file.
+Non-secret runtime config: niche, brand voice, brand colors, fonts, output dir, meme subreddits/timing, link-in-bio. Secrets are never put here.
 
 ### Manual reach levers (not automatable)
 

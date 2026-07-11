@@ -4,4 +4,3 @@ pyyaml
 Pillow
 google-genai
 supabase
-fpdf2

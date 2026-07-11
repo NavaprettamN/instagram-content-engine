@@ -20,27 +20,31 @@ AI/value-content machine instead of tuning it:
   `orchestrator.py` + scripts `autopilot.py`, `clip_publish.py`, `post_story.py`.
 - Kept: `meme.yml` (build + auto-publish meme reels 2×/day), `comment_reply.yml`,
   `analytics.yml`, `linkbio.yml`, `refresh_token.yml`.
-- `config.yaml` trimmed to meme/brand/funnel keys; niche + brand voice now
+- `config.yaml` trimmed to meme/brand keys; niche + brand voice now
   meme-account; `requirements.txt` cut to what's still imported.
-- Supabase `content_ideas` is legacy (nothing writes to it); dashboard Approval
-  Center now has no pipeline behind it — candidate for cleanup.
+- **Follow-up cleanup (same day, user-approved):** deleted the 82 orphaned
+  `content_ideas` rows in Supabase (pending_review/approved/designed; 46
+  published kept as history); removed the dashboard Content Queue page and
+  idea KPIs (Overview now followers/Δ/top posts), Controls now triggers
+  meme/comment/analytics/linkbio only; link-in-bio re-themed to the meme page
+  (latest reel + follow) — AI cheat-sheet lead magnet, Sovrn affiliate tools
+  page, and Gumroad product link removed (`data/lead_magnet.json`,
+  `scripts/build_product.py` deleted). Old funnel tasks #8–10 are retired.
 
 ### ✅ Done & running (current machine)
 - **Meme reels** — Reddit memes (meme-api.com) → 6s one-meme reels, upbeat CC
   music rotation, dedupe via `config.seen_memes`, auto-publish 06:00 & 15:00 UTC.
-- **Comment auto-reply**, **weekly analytics**, **link-in-bio funnel**
-  (affiliate + lead magnet + Gumroad product), **token auto-refresh**.
+- **Comment auto-reply**, **weekly analytics**, **link-in-bio** (meme-themed,
+  latest reel + follow), **token auto-refresh**.
 
 ### 🔄 In progress / needs attention
 - **Watch meme performance** — analytics is now purely about meme reels; tune
   `meme_subreddits`, cadence (maybe 3×/day), and posting hours from the weekly report.
-- **Funnel mismatch** — link-in-bio still sells "AI Productivity" assets to a
-  meme audience; decide whether to re-theme the funnel or leave it.
-- **Dashboard cleanup** — Approval Center / idea views are dead now the idea
-  pipeline is gone; simplify dashboard-web around published posts + analytics.
 - **Notification channel** — wire the chosen secret (ntfy topic / Discord / Slack webhook).
 
 ### ⬜ Pending
+- **Meme-audience monetization** — old AI funnel retired; when reach justifies
+  it, add meme-relevant offers to the bio (shoutouts, merch, meme pack).
 - #11 Media kit, #12 Sponsored slots (audience-gated — need reach to matter).
 - #13–15 Scale (multi-account, cross-platform, SaaS).
 

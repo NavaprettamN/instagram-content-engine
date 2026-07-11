@@ -25,44 +25,19 @@ font_regular: "./fonts/Inter-Regular.ttf"
 
 output_dir: "./generated_content"
 
-# ── Link-in-bio (GitHub Pages funnel) ─────────────────────────────
+# ── Link-in-bio (GitHub Pages) ────────────────────────────────────
 # Put the published Pages URL in your IG bio. "Latest Post" auto-fills with
-# your newest IG permalink on each daily rebuild; fill the other URLs as the
-# affiliate/lead-magnet/product tasks land.
+# your newest IG permalink on each daily rebuild. The old AI-themed funnel
+# (cheat-sheet lead magnet, affiliate tools page, Gumroad product) was removed
+# in the memes-only pivot — add meme-relevant links here when monetization
+# comes back (merch, shoutouts, a meme pack, etc.). build_linkbio only renders
+# guide.html/tools.html when lead_magnet/affiliate config exists.
 link_in_bio:
-  title: "AI Productivity Tools"
-  tagline: "Daily AI tips to work smarter, not harder 🤖"
+  title: "Daily Memes 😂"
+  tagline: "Fresh memes from the best of Reddit, every day"
   profile_url: "https://instagram.com/contentengine2"
   links:
-    - { emoji: "🆕", label: "My Latest Post",            url: "" }   # auto: newest permalink
-    - { emoji: "🎁", label: "Free: The AI Tools Cheat Sheet", url: "" } # lead magnet — auto: guide.html
-    - { emoji: "🛠️", label: "AI Tools I Recommend",       url: "" } # affiliate — auto: tools.html
-    - { emoji: "🛒", label: "The AI Productivity Pack",    url: "https://9001784317547.gumroad.com/l/dkvmqk" } # product (task #9)
-
-# ── Affiliate engine (#8) ─────────────────────────────────────────
-# Replace the example URLs with YOUR real affiliate links (sign up for each
-# tool's program). These render on the "Tools I Recommend" page (tools.html),
-# linked from the bio. UTM tags are appended for click visibility.
-lead_magnet:
-  title: "The AI Tools Cheat Sheet"
-  tagline: "My curated stack to work smarter — free 👇"
-  # Paste your Kit/ConvertKit (or any ESP) inline form EMBED here to capture
-  # emails on the guide page. Leave "" for an ungated free guide.
-  signup_embed: '<script async data-uid="6bf19048b3" src="https://navaprettam-n.kit.com/6bf19048b3/index.js"></script>'
-
-affiliate:
-  # Sovrn Commerce auto-converts the real merchant URLs below into affiliate
-  # links client-side (covered merchants only). Key is public by design (it ships
-  # in the page JS). Add more tools freely — no affiliate URLs needed.
-  sovrn_key: "397ce387a618e8a27eac7a307de7b5a1"
-  utm_source: "instagram"
-  utm_campaign: "bio_tools"
-  tools:
-    - { emoji: "🤖", name: "ChatGPT",  url: "https://chatgpt.com",       blurb: "The AI I use daily for writing & code" }
-    - { emoji: "🎨", name: "Canva",    url: "https://www.canva.com",     blurb: "Design scroll-stopping carousels fast" }
-    - { emoji: "✍️", name: "Notion",   url: "https://www.notion.so",     blurb: "Notes & docs that write themselves" }
-    - { emoji: "🔎", name: "Perplexity", url: "https://www.perplexity.ai", blurb: "AI search with real sources" }
-    - { emoji: "🎬", name: "CapCut",   url: "https://www.capcut.com",    blurb: "Auto-caption & edit reels fast" }
+    - { emoji: "🆕", label: "My Latest Reel", url: "" }   # auto: newest permalink
 
 # ── Audience ──────────────────────────────────────────────────────
 # meme.yml cron is in UTC; slots are tuned to this timezone's active hours.

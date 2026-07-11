@@ -2,11 +2,10 @@
 import { useState } from "react";
 
 const JOBS = [
-  { wf: "research.yml", label: "Research ideas", desc: "Pull trends → generate new content ideas" },
-  { wf: "generate.yml", label: "Generate content", desc: "Turn approved ideas into reels/carousels" },
-  { wf: "publish.yml", label: "Publish next post", desc: "Post the next queued item to Instagram" },
   { wf: "meme.yml", label: "Post a meme reel", desc: "Build + auto-publish a meme reel now" },
+  { wf: "comment_reply.yml", label: "Reply to comments", desc: "Poll new comments and reply on-brand" },
   { wf: "analytics.yml", label: "Refresh analytics", desc: "Pull Meta insights + weekly AI analysis" },
+  { wf: "linkbio.yml", label: "Rebuild link-in-bio", desc: "Redeploy the bio page to GitHub Pages" },
 ];
 
 export function ControlButtons() {

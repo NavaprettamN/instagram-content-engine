@@ -1,4 +1,4 @@
-import { getIdeas, getSnapshots, getConfigValue, counts } from "@/lib/data";
+import { getSnapshots, getConfigValue } from "@/lib/data";
 import { FollowerChart } from "@/components/FollowerChart";
 
 export const dynamic = "force-dynamic";
@@ -8,24 +8,26 @@ function parse<T>(s: string | null, fallback: T): T {
 }
 
 export default async function Overview() {
-  const [ideas, snaps, followerRaw, topRaw] = await Promise.all([
-    getIdeas(200),
+  const [snaps, followerRaw, topRaw] = await Promise.all([
     getSnapshots(1),
     getConfigValue("follower_history"),
     getConfigValue("top_performers"),
   ]);
 
-  const c = counts(ideas);
   const followers = parse<{ date: string; count: number }[]>(followerRaw, []);
   const top = parse<{ hook: string; type: string; score: number; saved: number; shares: number }[]>(topRaw, []);
   const latestFollowers = followers.at(-1)?.count ?? "—";
+  const prevFollowers = followers.at(-2)?.count;
+  const delta =
+    typeof latestFollowers === "number" && typeof prevFollowers === "number"
+      ? latestFollowers - prevFollowers
+      : null;
   const analysis: string = snaps[0]?.analysis ?? "";
 
   const kpis = [
     { l: "Followers", n: latestFollowers },
-    { l: "Published", n: c.published || 0 },
-    { l: "Ready to post", n: c.designed || 0 },
-    { l: "In review", n: c.pending_review || 0 },
+    { l: "Since last week", n: delta === null ? "—" : `${delta >= 0 ? "+" : ""}${delta}` },
+    { l: "Top posts tracked", n: top.length },
   ];
 
   return (

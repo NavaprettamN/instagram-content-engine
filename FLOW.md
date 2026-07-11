@@ -52,12 +52,7 @@ A set of **GitHub Actions cron jobs** (no server) run the whole thing:
 | **Posting times** | `.github/workflows/meme.yml` → the `cron:` line (UTC) |
 | Music vibe | `scripts/post_meme.py` → `genres` list; fallback tags in `config.yaml` `reel_music_tags` |
 | Comment-reply tone | `agents/comment_agent.py` (prompt) + `config.yaml` `brand_voice` |
-| Bio links / funnel | `config.yaml` → `link_in_bio` |
-| Lead-magnet guide contents | `data/lead_magnet.json` |
-| Email capture form | `config.yaml` → `lead_magnet.signup_embed` (Kit embed) |
-| Affiliate tools / Sovrn key | `config.yaml` → `affiliate` |
-| Product (Gumroad) link | `config.yaml` → the `🛒` link in `link_in_bio.links` |
-| The sellable product itself | `scripts/build_product.py` → re-run `python -m scripts.build_product` |
+| Bio links | `config.yaml` → `link_in_bio` (AI-themed funnel removed 2026-07-11; add `lead_magnet`/`affiliate` config back to re-enable guide/tools pages) |
 
 **Secrets (GitHub → Settings → Secrets → Actions):** `GEMINI_API_KEY`, `GROQ_API_KEY`, `META_ACCESS_TOKEN`, `INSTAGRAM_USER_ID`, `SUPABASE_URL`, `SUPABASE_KEY`, `JAMENDO_CLIENT_ID`, `GH_PAT`.
 The same values live in `.env` for local runs (`.env` is gitignored — never commit it).
@@ -68,8 +63,7 @@ The same values live in `.env` for local runs (`.env` is gitignored — never co
 
 - **Post a meme reel right now:** Actions → "Meme Reel" → Run workflow (or `python -m scripts.post_meme` locally).
 - **See analytics:** the web dashboard (`dashboard-web/`) → Analytics page.
-- **Rebuild the bio/funnel pages after editing config:** Actions → Link-in-bio → Run workflow (or wait for 06:00 UTC).
-- **Change what tools are recommended:** edit `config.yaml` `affiliate.tools` (real homepage URLs — Sovrn auto-affiliates the covered ones).
+- **Rebuild the bio page after editing config:** Actions → Link-in-bio → Run workflow (or wait for 06:00 UTC).
 
 ---
 
