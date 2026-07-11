@@ -97,19 +97,34 @@ class PublishingAgent:
         )
         return result.json()
 
-    def publish_story(self, image_url):
-        """Post a plain image to Stories. Note: the API can't add link/poll/quiz
-        stickers — this just reposts the visual to keep Stories active + drive
-        profile visits."""
+    def publish_story(self, media_url, is_video=False):
+        """Post an image or video (≤60s) to Stories. Note: the API can't add
+        link/poll/quiz stickers — this just reposts the visual to keep Stories
+        active + drive profile visits."""
         self._require_meta()
+        data = {"media_type": "STORIES", "access_token": self.access_token}
+        data["video_url" if is_video else "image_url"] = media_url
         container = requests.post(
-            f"{self.base_url}/{self.ig_user_id}/media",
-            data={"image_url": image_url, "media_type": "STORIES", "access_token": self.access_token},
-        ).json()
-        time.sleep(5)
+            f"{self.base_url}/{self.ig_user_id}/media", data=data).json()
+        if "id" not in container:
+            return container
+        container_id = container["id"]
+        if is_video:  # video containers process async, like reels
+            for _ in range(18):
+                status = requests.get(
+                    f"{self.base_url}/{container_id}",
+                    params={"fields": "status_code", "access_token": self.access_token},
+                ).json()
+                if status.get("status_code") == "FINISHED":
+                    break
+                if status.get("status_code") == "ERROR":
+                    return {"error": {"message": "story container ERROR (video fetch failed)"}}
+                time.sleep(10)
+        else:
+            time.sleep(5)
         result = requests.post(
             f"{self.base_url}/{self.ig_user_id}/media_publish",
-            data={"creation_id": container.get("id"), "access_token": self.access_token},
+            data={"creation_id": container_id, "access_token": self.access_token},
         )
         return result.json()
 

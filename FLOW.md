@@ -15,7 +15,7 @@ A set of **GitHub Actions cron jobs** (no server) run the whole thing:
 
 | Workflow | When | What it does | Can break if… |
 |---|---|---|---|
-| `meme.yml` | daily 06:00 & 15:00 UTC | Reddit memes → 6s reel + CC music → auto-publish to IG | meme-api.com down, Meta token, Jamendo |
+| `meme.yml` | daily 06:00 & 15:00 UTC | Reddit memes → reel (alternates video/images) → auto-publish + story repost | meme-api.com / Reddit RSS down, Meta token, Jamendo |
 | `comment_reply.yml` | every 2h | Gemini replies to new comments | Gemini quota, Meta token |
 | `analytics.yml` | weekly Sun 20:00 | metrics → AI analysis, best-hours, follower trend | Gemini quota, Meta token |
 | `linkbio.yml` | daily 06:00 UTC | rebuilds the GitHub Pages bio funnel | Meta token (latest-post link) |
@@ -49,6 +49,8 @@ A set of **GitHub Actions cron jobs** (no server) run the whole thing:
 |---|---|
 | Niche, brand voice, colors | `config.yaml` |
 | **Meme subreddits / score floor / pacing** | `config.yaml` → `meme_subreddits`, `meme_min_score`, `memes_per_reel`, `meme_seconds_each` |
+| **Video meme subreddits / length limits** | `config.yaml` → `meme_video_subreddits`, `meme_video_max_seconds` (video runs fall back to images when nothing fresh) |
+| **Force a format for one run** | Actions → Meme Reel → Run workflow → `format` = video / images |
 | **Posting times** | `.github/workflows/meme.yml` → the `cron:` line (UTC) |
 | Music vibe | `scripts/post_meme.py` → `genres` list; fallback tags in `config.yaml` `reel_music_tags` |
 | Comment-reply tone | `agents/comment_agent.py` (prompt) + `config.yaml` `brand_voice` |

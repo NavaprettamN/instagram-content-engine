@@ -38,6 +38,10 @@ link_in_bio:
   profile_url: "https://instagram.com/contentengine2"
   links:
     - { emoji: "🆕", label: "My Latest Reel", url: "" }   # auto: newest permalink
+    # Monetization (Phase H): promo/shoutout slots are the realistic first
+    # revenue for a meme page — this opens a DM to negotiate. Rate card comes
+    # later (task #11 media kit) once analytics has reach numbers to show.
+    - { emoji: "📢", label: "Promote your brand here (DM)", url: "https://ig.me/m/contentengine2" }
 
 # ── Audience ──────────────────────────────────────────────────────
 # meme.yml cron is in UTC; slots are tuned to this timezone's active hours.
@@ -62,3 +66,13 @@ meme_subreddits:
 meme_min_score: 2000
 memes_per_reel: 1        # one meme per reel — held long enough to read (was a fast 4-up dump)
 meme_seconds_each: 6     # seconds each meme is on screen
+
+# Video memes (Phase H): top v.redd.it posts, re-framed 9:16, original audio.
+# Runs alternate video/images; video runs fall back to images if nothing fresh.
+meme_video_subreddits:
+  - "Unexpected"
+  - "funny"
+  - "ContagiousLaughter"
+  - "AnimalsBeingDerps"
+meme_video_max_seconds: 45
+meme_video_min_seconds: 3

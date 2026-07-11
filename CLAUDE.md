@@ -32,14 +32,19 @@ they're historical.
 ### Pipeline (fully hands-off)
 
 ```
-meme.yml (06:00 & 15:00 UTC daily)
-  MemeAgent.fetch_memes() — Reddit meme subreddits (config.meme_subreddits),
-    skips already-used memes (config.seen_memes in Supabase)
-  → MemeAgent.build_reel() — one meme per 6s reel, ffmpeg, readable hold
-  → MusicAgent.pick_track() — upbeat CC music bed (Jamendo), genre+track rotate
-    via a persistent counter (config.meme_music_seed); credit appended to caption
-  → upload_video() → Supabase storage public URL
+meme.yml (06:00 & 15:00 UTC daily; dispatch input `format` forces video/images)
+  Alternates per run via the persistent counter (config.meme_music_seed):
+  ODD runs — Reddit VIDEO memes:
+    MemeAgent.fetch_videos() — Reddit RSS → v.redd.it HLS → ffmpeg 9:16 re-frame
+      (blurred cover bg + centered video + PIL credit overlay), ORIGINAL audio
+    falls back to image memes when nothing fresh/reachable
+  EVEN runs — image memes:
+    MemeAgent.fetch_memes() — meme-api.com (keyless Reddit proxy)
+    → build_reel() — one meme per 6s reel + MusicAgent CC music bed (genre+track
+      rotate by the counter); credit appended to caption
+  Both: dedupe via config.seen_memes → upload_video() → Supabase public URL
   → PublishingAgent.publish_reel() → Instagram API (auto-publish)
+  → publish_story(url, is_video=True) — same reel reposted to Stories (best-effort)
 
 comment_reply.yml (every 2h, :30)
   poll recent media comments → Gemini drafts on-brand replies (SKIP spam/negative)
@@ -62,7 +67,9 @@ refresh_token.yml (monthly)
 
 **Token refresh:** Single GET to `graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=...` — no app id/secret needed. `scripts/refresh_token.py` + `refresh_token.yml` handle this monthly. Requires a `GH_PAT` secret (repo `secrets: write`) because `GITHUB_TOKEN` can't update secrets.
 
-**Music:** Trending/licensed IG audio can't be attached via the API — only music pre-embedded in the video file works for auto-publish. MemeAgent bakes in a CC Jamendo track; that's the deliberate trade for zero manual work.
+**Music:** Trending/licensed IG audio can't be attached via the API — only music pre-embedded in the video file works for auto-publish. Image reels bake in a CC Jamendo track; video memes keep the original Reddit audio (usually the joke). That's the deliberate trade for zero manual work.
+
+**Reddit access:** Unauthenticated JSON (`.json`, `api.reddit.com`, old.reddit) 403s from everywhere now. What works: meme-api.com (images), Reddit's Atom RSS (`/r/<sub>/top/.rss`, needs retry — bursts get an empty 200), and v.redd.it's public `HLSPlaylist.m3u8`/`DASHPlaylist.mpd` (direct `DASH_*.mp4` URLs 403).
 
 **Meme dedupe:** `scripts/post_meme.py` persists used meme ids in Supabase `config.seen_memes` **before** publishing, so a publish retry can't double-use memes.
 

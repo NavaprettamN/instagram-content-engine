@@ -32,20 +32,40 @@ AI/value-content machine instead of tuning it:
   `scripts/build_product.py` deleted). Old funnel tasks #8–10 are retired.
 
 ### ✅ Done & running (current machine)
-- **Meme reels** — Reddit memes (meme-api.com) → 6s one-meme reels, upbeat CC
-  music rotation, dedupe via `config.seen_memes`, auto-publish 06:00 & 15:00 UTC.
-- **Comment auto-reply**, **weekly analytics**, **link-in-bio** (meme-themed,
-  latest reel + follow), **token auto-refresh**.
+- **Meme reels** — alternate per run: Reddit VIDEO memes (RSS → v.redd.it HLS →
+  9:16 re-frame, original audio; falls back to images) and image meme reels
+  (meme-api.com, 6s hold, CC music rotation). Dedupe via `config.seen_memes`,
+  auto-publish 06:00 & 15:00 UTC, then the same reel reposted to Stories.
+- **Comment auto-reply**, **weekly analytics**, **link-in-bio** (meme-themed:
+  latest reel + "Promote your brand" DM link + follow), **token auto-refresh**.
+
+### 💰 Monetization plan (meme account, 2026-07-11 ideation)
+Meme pages make money from **attention arbitrage** — the product is reach.
+Realistic ladder, in order of when each unlocks:
+1. **Shoutouts / promo slots (primary; ~5–10k followers)** — brands, apps, and
+   smaller pages pay for a story or reel promo. Setup DONE: "📢 Promote your
+   brand here" DM link live in the bio. Next: #11 media kit auto-generated from
+   analytics (reach, saves, audience geo) + a simple rate card when DMs start.
+2. **Affiliate that fits meme traffic (~10k)** — broad-appeal offers only
+   (mobile games/apps with CPI programs, food/shopping deals). The linkbio
+   builder still supports an affiliate page — re-add config when there's reach.
+3. **IG creator monetization (gated)** — reels bonuses are invite-only and
+   mostly unavailable in India; treat as a bonus, not a plan.
+4. **Digital product (~20k+)** — meme pages sell templates/pack or shoutout
+   bundles poorly; better: sell **placement**, keep products for later.
+5. **Page flipping / network (later)** — grown meme pages resell; multi-account
+   (#13) multiplies this.
+Everything is audience-gated → the real job now is cadence + format quality;
+revenue tasks unblock at follower milestones, not code milestones.
 
 ### 🔄 In progress / needs attention
-- **Watch meme performance** — analytics is now purely about meme reels; tune
-  `meme_subreddits`, cadence (maybe 3×/day), and posting hours from the weekly report.
+- **Watch meme performance** — video vs image reels is now the A/B to watch in
+  weekly analytics; tune subreddits, cadence (maybe 3×/day), posting hours.
 - **Notification channel** — wire the chosen secret (ntfy topic / Discord / Slack webhook).
 
 ### ⬜ Pending
-- **Meme-audience monetization** — old AI funnel retired; when reach justifies
-  it, add meme-relevant offers to the bio (shoutouts, merch, meme pack).
-- #11 Media kit, #12 Sponsored slots (audience-gated — need reach to matter).
+- #11 Media kit (first monetization code task — build when promo DMs start or ~5k followers).
+- #12 Sponsored slot scheduler (after #11).
 - #13–15 Scale (multi-account, cross-platform, SaaS).
 
 ---
