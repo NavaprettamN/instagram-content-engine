@@ -42,6 +42,12 @@ AI/value-content machine instead of tuning it:
   "Meme Engine": new UI, meme format picker (Auto/Video/Images), recent-posts
   grid with live engagement, Google auth locked to the owner. Git auto-deploys
   from main (root dir dashboard-web); OAuth client + all env vars configured.
+  [~] Sign-in fix deployed but NOT yet user-confirmed: first attempt hit
+  redirect_uri_mismatch (two OAuth clients existed; Vercel had old ID + new
+  secret). Fixed: AUTH_GOOGLE_ID now the "Web client 1" client (…bceqan, in
+  Google project "finance-app") — verified the live OAuth redirect carries it.
+  Next session: ask user if login works; if not, check Google propagation /
+  client Save state. Old unused client …qlbe0h can be deleted in Google console.
 
 ### 💰 Monetization plan (meme account, 2026-07-11 ideation)
 Meme pages make money from **attention arbitrage** — the product is reach.
