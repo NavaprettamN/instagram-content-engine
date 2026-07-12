@@ -1,6 +1,7 @@
 # Meme Engine — Web Dashboard
 
-A Next.js control panel for the Instagram meme engine, hosted on Vercel.
+A Next.js control panel for the Instagram meme engine, hosted on Vercel at
+https://meme-engine-dashboard.vercel.app (auto-deploys from `main`).
 Google-login gated (owner's email is the built-in admin), reads Supabase and
 the Instagram API server-side, and triggers the GitHub Actions jobs on demand.
 
@@ -19,7 +20,7 @@ Pages:
 3. **APIs & Services → Credentials → Create Credentials → OAuth client ID → Web application.**
 4. Authorized redirect URIs — add both:
    - `http://localhost:3000/api/auth/callback/google` (local dev)
-   - `https://YOUR-APP.vercel.app/api/auth/callback/google` (after you know the Vercel URL)
+   - `https://meme-engine-dashboard.vercel.app/api/auth/callback/google`
 5. Copy the **Client ID** and **Client secret**.
 
 ### 2. Deploy on Vercel
