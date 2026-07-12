@@ -48,6 +48,15 @@ AI/value-content machine instead of tuning it:
   Google project "finance-app") — verified the live OAuth redirect carries it.
   Next session: ask user if login works; if not, check Google propagation /
   client Save state. Old unused client …qlbe0h can be deleted in Google console.
+- **Dashboard analytics enriched** (2026-07-12) — Overview now pulls Instagram
+  account-level insights (last 30d: accounts reached, account interactions,
+  accounts engaged, profile views, likes, comments, saves, shares, link-in-bio
+  taps) via `/{ig-user}/insights?metric_type=total_value`, plus per-post
+  insights (reach/saves/shares/views) merged into `getRecentMedia`. New
+  "Account insights" KPI grid + "Per-post breakdown" table on the Overview
+  page; post cards now show reach. Each metric fetched separately so one
+  unsupported metric can't blank the panel (degrades to null/"–"). lib/data.ts
+  + app/(app)/overview/page.tsx. Build + typecheck pass.
 
 ### 💰 Monetization plan (meme account, 2026-07-11 ideation)
 Meme pages make money from **attention arbitrage** — the product is reach.

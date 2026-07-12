@@ -1,4 +1,6 @@
-import { getSnapshots, getConfigValue, getRecentMedia, IgMedia } from "@/lib/data";
+import {
+  getSnapshots, getConfigValue, getRecentMedia, getAccountInsights, IgMedia,
+} from "@/lib/data";
 import { FollowerChart } from "@/components/FollowerChart";
 
 export const dynamic = "force-dynamic";
@@ -6,6 +8,9 @@ export const dynamic = "force-dynamic";
 function parse<T>(s: string | null, fallback: T): T {
   try { return s ? JSON.parse(s) : fallback; } catch { return fallback; }
 }
+
+const fmt = (n: number | null | undefined) =>
+  typeof n === "number" ? n.toLocaleString() : "–";
 
 function PostCard({ m }: { m: IgMedia }) {
   const img = m.thumbnail_url || (m.media_type !== "VIDEO" ? m.media_url : null);
@@ -17,8 +22,9 @@ function PostCard({ m }: { m: IgMedia }) {
         : <div className="noimg">{m.caption?.slice(0, 70) || "View post"}</div>}
       <span className="kind">{kind}</span>
       <div className="meta">
-        <span>❤️ {m.like_count ?? "–"}</span>
-        <span>💬 {m.comments_count ?? "–"}</span>
+        <span>❤️ {fmt(m.like_count)}</span>
+        <span>💬 {fmt(m.comments_count)}</span>
+        {m.reach != null && <span>👁 {fmt(m.reach)}</span>}
         <span style={{ marginLeft: "auto", fontWeight: 600, color: "#c9cde4" }}>
           {m.timestamp?.slice(5, 10)}
         </span>
@@ -28,11 +34,12 @@ function PostCard({ m }: { m: IgMedia }) {
 }
 
 export default async function Overview() {
-  const [snaps, followerRaw, topRaw, media] = await Promise.all([
+  const [snaps, followerRaw, topRaw, media, insights] = await Promise.all([
     getSnapshots(1),
     getConfigValue("follower_history"),
     getConfigValue("top_performers"),
     getRecentMedia(12),
+    getAccountInsights(30),
   ]);
 
   const followers = parse<{ date: string; count: number }[]>(followerRaw, []);
@@ -77,6 +84,52 @@ export default async function Overview() {
         )}
       </div>
 
+      {insights && (
+        <div className="section" style={{ marginTop: 26 }}>
+          <h2>Account insights · last {insights.days} days</h2>
+          <div className="grid">
+            <div className="card kpi">
+              <div className="n">{fmt(insights.reach)}</div>
+              <div className="l">Accounts reached</div>
+            </div>
+            <div className="card kpi">
+              <div className="n">{fmt(insights.interactions)}</div>
+              <div className="l">Account interactions</div>
+            </div>
+            <div className="card kpi">
+              <div className="n">{fmt(insights.engaged)}</div>
+              <div className="l">Accounts engaged</div>
+            </div>
+            <div className="card kpi">
+              <div className="n">{fmt(insights.profileViews)}</div>
+              <div className="l">Profile views</div>
+            </div>
+            <div className="card kpi">
+              <div className="n">{fmt(insights.likes)}</div>
+              <div className="l">Likes</div>
+            </div>
+            <div className="card kpi">
+              <div className="n">{fmt(insights.comments)}</div>
+              <div className="l">Comments</div>
+            </div>
+            <div className="card kpi">
+              <div className="n">{fmt(insights.saves)}</div>
+              <div className="l">Saves</div>
+            </div>
+            <div className="card kpi">
+              <div className="n">{fmt(insights.shares)}</div>
+              <div className="l">Shares</div>
+            </div>
+            {insights.linkTaps != null && (
+              <div className="card kpi">
+                <div className="n">{fmt(insights.linkTaps)}</div>
+                <div className="l">Link-in-bio taps</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="section" style={{ marginTop: 26 }}>
         <h2>Follower growth</h2>
         <div className="card">
@@ -99,6 +152,45 @@ export default async function Overview() {
           </div>
         )}
       </div>
+
+      {media.length > 0 && (
+        <div className="section">
+          <h2>Per-post breakdown</h2>
+          <div className="card scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Post</th><th>Type</th><th>Date</th>
+                  <th>Reach</th><th>❤️ Likes</th><th>💬 Comments</th>
+                  <th>Saves</th><th>Shares</th>
+                </tr>
+              </thead>
+              <tbody>
+                {media.map((m) => (
+                  <tr key={m.id}>
+                    <td>
+                      <a href={m.permalink} target="_blank" rel="noopener" style={{ color: "#b3a0ff" }}>
+                        {(m.caption || "View post").replace(/\s+/g, " ").slice(0, 48)}
+                      </a>
+                    </td>
+                    <td>
+                      <span className={`tag ${m.media_product_type === "REELS" ? "reel" : m.media_type}`}>
+                        {m.media_product_type === "REELS" ? "REEL" : m.media_type.replace("_ALBUM", "")}
+                      </span>
+                    </td>
+                    <td>{m.timestamp?.slice(0, 10)}</td>
+                    <td>{fmt(m.reach)}</td>
+                    <td>{fmt(m.like_count)}</td>
+                    <td>{fmt(m.comments_count)}</td>
+                    <td>{fmt(m.saved)}</td>
+                    <td>{fmt(m.shares)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div className="section">
         <h2>Top performers</h2>
