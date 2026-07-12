@@ -38,6 +38,10 @@ AI/value-content machine instead of tuning it:
   auto-publish 06:00 & 15:00 UTC, then the same reel reposted to Stories.
 - **Comment auto-reply**, **weekly analytics**, **link-in-bio** (meme-themed:
   latest reel + "Promote your brand" DM link + follow), **token auto-refresh**.
+- **Dashboard LIVE on Vercel** (2026-07-12) — https://meme-engine-dashboard.vercel.app
+  "Meme Engine": new UI, meme format picker (Auto/Video/Images), recent-posts
+  grid with live engagement, Google auth locked to the owner. Git auto-deploys
+  from main (root dir dashboard-web); OAuth client + all env vars configured.
 
 ### 💰 Monetization plan (meme account, 2026-07-11 ideation)
 Meme pages make money from **attention arbitrage** — the product is reach.
@@ -59,11 +63,6 @@ Everything is audience-gated → the real job now is cadence + format quality;
 revenue tasks unblock at follower milestones, not code milestones.
 
 ### 🔄 In progress / needs attention
-- **Dashboard LIVE on Vercel** (2026-07-12) — https://meme-engine-dashboard.vercel.app
-  ("Meme Engine": new UI, meme format picker, recent-posts grid, owner-locked
-  Google auth). Env vars set; git auto-deploy on push (root dir dashboard-web).
-  REMAINING (user): create the Google OAuth client and hand over
-  AUTH_GOOGLE_ID/SECRET — sign-in errors until then (README step 1).
 - **Watch meme performance** — video vs image reels is now the A/B to watch in
   weekly analytics; tune subreddits, cadence (maybe 3×/day), posting hours.
 - **Notification channel** — wire the chosen secret (ntfy topic / Discord / Slack webhook).
