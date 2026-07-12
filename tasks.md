@@ -67,6 +67,14 @@ AI/value-content machine instead of tuning it:
   pass; login verified rendering locally in the new theme. Pushed to main
   (auto-deploys to Vercel). Note: overview can't be rendered locally (needs the
   Supabase/AUTH env that only lives in Vercel) — verify visually on the live URL.
+- **Dashboard dark mode** (2026-07-12) — full dark variant via a
+  :root[data-theme="dark"] token block over the light palette. No-flash inline
+  script in app/layout.tsx resolves theme before paint (localStorage choice,
+  else OS prefers-color-scheme); sidebar ThemeToggle.tsx flips data-theme +
+  persists. FollowerChart made theme-aware (chart tokens via style, since SVG
+  attrs don't resolve var()). Fixed brand mark, chart tooltip, post-type badge,
+  tag colors for dark. Build + typecheck pass; dark CSS + init script verified
+  served locally. Pushed to main.
 
 ### 💰 Monetization plan (meme account, 2026-07-11 ideation)
 Meme pages make money from **attention arbitrage** — the product is reach.
