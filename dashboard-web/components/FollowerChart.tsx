@@ -4,7 +4,11 @@
 // direct-labeled. Grid and axis text stay recessive; values use text tokens.
 import { useRef, useState } from "react";
 
-const LINE = "#8b7cf7"; // validated against the dark panel surface
+const LINE = "#2383e2"; // accent blue, validated against the white card surface
+const GRID = "#ebebea";
+const AXIS = "#9b9a95";
+const LABEL = "#37352f";
+const CARD = "#ffffff";
 
 export function FollowerChart({ points }: { points: { date: string; value: number }[] }) {
   const wrap = useRef<HTMLDivElement>(null);
@@ -53,8 +57,8 @@ export function FollowerChart({ points }: { points: { date: string; value: numbe
           [minY, (minY + maxY) / 2, maxY].map((v) => [Math.round(v), v]),
         ).values()].map((v, i) => (
           <g key={i}>
-            <line x1={P} x2={W - P} y1={y(v)} y2={y(v)} stroke="#262a49" strokeWidth="1" />
-            <text x={P - 6} y={y(v) + 4} fill="#6a6f8e" fontSize="11" textAnchor="end">
+            <line x1={P} x2={W - P} y1={y(v)} y2={y(v)} stroke={GRID} strokeWidth="1" />
+            <text x={P - 6} y={y(v) + 4} fill={AXIS} fontSize="11" textAnchor="end">
               {Math.round(v).toLocaleString()}
             </text>
           </g>
@@ -62,20 +66,20 @@ export function FollowerChart({ points }: { points: { date: string; value: numbe
         <path d={area} fill="url(#fg)" />
         <path d={d} fill="none" stroke={LINE} strokeWidth="2" strokeLinejoin="round" />
         {/* direct label on the latest point */}
-        <circle cx={x(points.length - 1)} cy={y(last.value)} r="4" fill={LINE} stroke="#14162a" strokeWidth="2" />
-        <text x={x(points.length - 1) - 8} y={y(last.value) - 10} fill="#eef0f8" fontSize="12" fontWeight="700" textAnchor="end">
+        <circle cx={x(points.length - 1)} cy={y(last.value)} r="4" fill={LINE} stroke={CARD} strokeWidth="2" />
+        <text x={x(points.length - 1) - 8} y={y(last.value) - 10} fill={LABEL} fontSize="12" fontWeight="700" textAnchor="end">
           {last.value.toLocaleString()}
         </text>
         {/* crosshair + hovered point */}
         {h && hover !== null && (
           <g>
-            <line x1={x(hover)} x2={x(hover)} y1={P - 10} y2={H - P} stroke="#3a3f66" strokeWidth="1" strokeDasharray="3 3" />
-            <circle cx={x(hover)} cy={y(h.value)} r="5" fill={LINE} stroke="#14162a" strokeWidth="2" />
+            <line x1={x(hover)} x2={x(hover)} y1={P - 10} y2={H - P} stroke={AXIS} strokeWidth="1" strokeDasharray="3 3" />
+            <circle cx={x(hover)} cy={y(h.value)} r="5" fill={LINE} stroke={CARD} strokeWidth="2" />
           </g>
         )}
         {/* x-axis endpoints */}
-        <text x={P} y={H - 8} fill="#6a6f8e" fontSize="11">{points[0].date}</text>
-        <text x={W - P} y={H - 8} fill="#6a6f8e" fontSize="11" textAnchor="end">{last.date}</text>
+        <text x={P} y={H - 8} fill={AXIS} fontSize="11">{points[0].date}</text>
+        <text x={W - P} y={H - 8} fill={AXIS} fontSize="11" textAnchor="end">{last.date}</text>
       </svg>
       {h && hover !== null && (
         <div

@@ -1,29 +1,32 @@
 "use client";
 import { useState } from "react";
+import { Icon, IconName } from "@/components/Icon";
 
-const JOBS = [
+const JOBS: {
+  wf: string; icon: IconName; label: string; desc: string; hasFormat?: boolean;
+}[] = [
   {
     wf: "meme.yml",
-    icon: "🎬",
+    icon: "film",
     label: "Post a meme reel",
     desc: "Build + auto-publish a meme reel now (also reposts it to Stories)",
     hasFormat: true,
   },
   {
     wf: "comment_reply.yml",
-    icon: "💬",
+    icon: "message",
     label: "Reply to comments",
     desc: "Poll new comments and reply on-brand",
   },
   {
     wf: "analytics.yml",
-    icon: "📈",
+    icon: "bar-chart",
     label: "Refresh analytics",
     desc: "Pull Meta insights + weekly AI analysis",
   },
   {
     wf: "linkbio.yml",
-    icon: "🔗",
+    icon: "link",
     label: "Rebuild link-in-bio",
     desc: "Redeploy the bio page to GitHub Pages",
   },
@@ -35,12 +38,14 @@ const FORMATS = [
   { v: "images", label: "Images", hint: "image meme + CC music" },
 ];
 
+type RunState = { state: "running" | "ok" | "error"; msg: string };
+
 export function ControlButtons() {
-  const [status, setStatus] = useState<Record<string, string>>({});
+  const [status, setStatus] = useState<Record<string, RunState>>({});
   const [format, setFormat] = useState("auto");
 
   async function run(wf: string, inputs?: Record<string, string>) {
-    setStatus((s) => ({ ...s, [wf]: "starting…" }));
+    setStatus((s) => ({ ...s, [wf]: { state: "running", msg: "Starting…" } }));
     try {
       const r = await fetch("/api/trigger", {
         method: "POST",
@@ -48,9 +53,14 @@ export function ControlButtons() {
         body: JSON.stringify({ workflow: wf, inputs }),
       });
       const j = await r.json();
-      setStatus((s) => ({ ...s, [wf]: r.ok ? "✓ started" : `✗ ${j.error || r.status}` }));
+      setStatus((s) => ({
+        ...s,
+        [wf]: r.ok
+          ? { state: "ok", msg: "Started" }
+          : { state: "error", msg: String(j.error || r.status) },
+      }));
     } catch (e) {
-      setStatus((s) => ({ ...s, [wf]: `✗ ${String(e)}` }));
+      setStatus((s) => ({ ...s, [wf]: { state: "error", msg: String(e) } }));
     }
   }
 
@@ -59,7 +69,7 @@ export function ControlButtons() {
       {JOBS.map((j) => (
         <div className="card job" key={j.wf}>
           <div className="job-head">
-            <span className="job-icon">{j.icon}</span>
+            <span className="job-icon"><Icon name={j.icon} size={18} /></span>
             <div>
               <div className="job-title">{j.label}</div>
               <div className="job-desc">{j.desc}</div>
@@ -84,12 +94,17 @@ export function ControlButtons() {
             <button
               className="btn primary"
               onClick={() => run(j.wf, j.hasFormat ? { format } : undefined)}
+              disabled={status[j.wf]?.state === "running"}
             >
               Run now
             </button>
-            <span className={`run-status ${status[j.wf]?.startsWith("✗") ? "bad" : ""}`}>
-              {status[j.wf] || ""}
-            </span>
+            {status[j.wf] && (
+              <span className={`run-status ${status[j.wf].state === "error" ? "bad" : ""}`}>
+                {status[j.wf].state === "ok" && <Icon name="check" size={14} />}
+                {status[j.wf].state === "error" && <Icon name="x" size={14} />}
+                {status[j.wf].msg}
+              </span>
+            )}
           </div>
         </div>
       ))}

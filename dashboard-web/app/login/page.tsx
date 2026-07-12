@@ -17,9 +17,9 @@ export default async function Login() {
   return (
     <div className="center">
       <div className="login">
-        <div className="brand" style={{ fontSize: 22, marginBottom: 10 }}>
-          <div className="brand-mark">😂</div>
-          <div>Meme <span>Engine</span></div>
+        <div className="brand" style={{ fontSize: 18, marginBottom: 10 }}>
+          <div className="brand-mark">M</div>
+          <div>Meme Engine</div>
         </div>
         <p className="muted" style={{ marginBottom: 30 }}>
           The control panel for your Instagram meme machine.
