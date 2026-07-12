@@ -4,11 +4,14 @@
 // direct-labeled. Grid and axis text stay recessive; values use text tokens.
 import { useRef, useState } from "react";
 
-const LINE = "#2383e2"; // accent blue, validated against the white card surface
-const GRID = "#ebebea";
-const AXIS = "#9b9a95";
-const LABEL = "#37352f";
-const CARD = "#ffffff";
+// Theme tokens — CSS custom properties so the chart follows light/dark mode.
+// SVG presentation attributes don't resolve var(), so these are applied via
+// the `style` prop on each element instead of as attributes.
+const LINE = "var(--chart-line)";
+const GRID = "var(--chart-grid)";
+const AXIS = "var(--chart-axis)";
+const LABEL = "var(--chart-label)";
+const CARD = "var(--panel)"; // punch-out stroke behind data points
 
 export function FollowerChart({ points }: { points: { date: string; value: number }[] }) {
   const wrap = useRef<HTMLDivElement>(null);
@@ -48,8 +51,8 @@ export function FollowerChart({ points }: { points: { date: string; value: numbe
       >
         <defs>
           <linearGradient id="fg" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={LINE} stopOpacity="0.30" />
-            <stop offset="100%" stopColor={LINE} stopOpacity="0" />
+            <stop offset="0%" style={{ stopColor: LINE, stopOpacity: 0.3 }} />
+            <stop offset="100%" style={{ stopColor: LINE, stopOpacity: 0 }} />
           </linearGradient>
         </defs>
         {/* recessive gridlines at min / mid / max (mid only when its label is distinct) */}
@@ -57,29 +60,29 @@ export function FollowerChart({ points }: { points: { date: string; value: numbe
           [minY, (minY + maxY) / 2, maxY].map((v) => [Math.round(v), v]),
         ).values()].map((v, i) => (
           <g key={i}>
-            <line x1={P} x2={W - P} y1={y(v)} y2={y(v)} stroke={GRID} strokeWidth="1" />
-            <text x={P - 6} y={y(v) + 4} fill={AXIS} fontSize="11" textAnchor="end">
+            <line x1={P} x2={W - P} y1={y(v)} y2={y(v)} style={{ stroke: GRID }} strokeWidth="1" />
+            <text x={P - 6} y={y(v) + 4} style={{ fill: AXIS }} fontSize="11" textAnchor="end">
               {Math.round(v).toLocaleString()}
             </text>
           </g>
         ))}
         <path d={area} fill="url(#fg)" />
-        <path d={d} fill="none" stroke={LINE} strokeWidth="2" strokeLinejoin="round" />
+        <path d={d} fill="none" style={{ stroke: LINE }} strokeWidth="2" strokeLinejoin="round" />
         {/* direct label on the latest point */}
-        <circle cx={x(points.length - 1)} cy={y(last.value)} r="4" fill={LINE} stroke={CARD} strokeWidth="2" />
-        <text x={x(points.length - 1) - 8} y={y(last.value) - 10} fill={LABEL} fontSize="12" fontWeight="700" textAnchor="end">
+        <circle cx={x(points.length - 1)} cy={y(last.value)} r="4" style={{ fill: LINE, stroke: CARD }} strokeWidth="2" />
+        <text x={x(points.length - 1) - 8} y={y(last.value) - 10} style={{ fill: LABEL }} fontSize="12" fontWeight="700" textAnchor="end">
           {last.value.toLocaleString()}
         </text>
         {/* crosshair + hovered point */}
         {h && hover !== null && (
           <g>
-            <line x1={x(hover)} x2={x(hover)} y1={P - 10} y2={H - P} stroke={AXIS} strokeWidth="1" strokeDasharray="3 3" />
-            <circle cx={x(hover)} cy={y(h.value)} r="5" fill={LINE} stroke={CARD} strokeWidth="2" />
+            <line x1={x(hover)} x2={x(hover)} y1={P - 10} y2={H - P} style={{ stroke: AXIS }} strokeWidth="1" strokeDasharray="3 3" />
+            <circle cx={x(hover)} cy={y(h.value)} r="5" style={{ fill: LINE, stroke: CARD }} strokeWidth="2" />
           </g>
         )}
         {/* x-axis endpoints */}
-        <text x={P} y={H - 8} fill={AXIS} fontSize="11">{points[0].date}</text>
-        <text x={W - P} y={H - 8} fill={AXIS} fontSize="11" textAnchor="end">{last.date}</text>
+        <text x={P} y={H - 8} style={{ fill: AXIS }} fontSize="11">{points[0].date}</text>
+        <text x={W - P} y={H - 8} style={{ fill: AXIS }} fontSize="11" textAnchor="end">{last.date}</text>
       </svg>
       {h && hover !== null && (
         <div

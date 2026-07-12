@@ -2,6 +2,7 @@ import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { NavLink } from "@/components/NavLink";
 import { Icon } from "@/components/Icon";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -17,6 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <NavLink href="/overview"><span className="ico"><Icon name="grid" size={17} /></span>Overview</NavLink>
           <NavLink href="/controls"><span className="ico"><Icon name="sliders" size={17} /></span>Controls</NavLink>
         </nav>
+        <ThemeToggle />
         <div className="who">
           <b>{session?.user?.name || "Admin"}</b>
           {session?.user?.email}
