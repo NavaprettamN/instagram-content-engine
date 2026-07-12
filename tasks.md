@@ -57,6 +57,16 @@ AI/value-content machine instead of tuning it:
   page; post cards now show reach. Each metric fetched separately so one
   unsupported metric can't blank the panel (degrades to null/"–"). lib/data.ts
   + app/(app)/overview/page.tsx. Build + typecheck pass.
+- **Dashboard UI redesign — Notion style** (2026-07-12) — replaced the dark
+  neon-gradient theme with a clean light Notion-style system (warm neutrals,
+  hairline borders, single blue accent #2383e2, flat cards). Dropped ALL emoji
+  in favour of a dependency-free inline SVG line-icon set (components/Icon.tsx):
+  brand monogram "M", nav, KPI corner icons, post-card stats, job cards, run
+  status. Recolored FollowerChart for the white surface; refined tables
+  (right-aligned nums, row hover), tags, buttons, posts grid. Build + typecheck
+  pass; login verified rendering locally in the new theme. Pushed to main
+  (auto-deploys to Vercel). Note: overview can't be rendered locally (needs the
+  Supabase/AUTH env that only lives in Vercel) — verify visually on the live URL.
 
 ### 💰 Monetization plan (meme account, 2026-07-11 ideation)
 Meme pages make money from **attention arbitrage** — the product is reach.
