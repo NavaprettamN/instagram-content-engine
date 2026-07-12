@@ -59,6 +59,10 @@ Everything is audience-gated → the real job now is cadence + format quality;
 revenue tasks unblock at follower milestones, not code milestones.
 
 ### 🔄 In progress / needs attention
+- **Vercel deploy (user action)** — dashboard rebuilt 2026-07-12 ("Meme Engine":
+  new UI, meme format picker, recent-posts grid, owner-locked Google auth) and
+  ready to host. Needs: Google OAuth client + Vercel project import (root dir
+  `dashboard-web`) + env vars — steps in dashboard-web/README.md.
 - **Watch meme performance** — video vs image reels is now the A/B to watch in
   weekly analytics; tune subreddits, cadence (maybe 3×/day), posting hours.
 - **Notification channel** — wire the chosen secret (ntfy topic / Discord / Slack webhook).
