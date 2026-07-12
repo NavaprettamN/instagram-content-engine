@@ -1,39 +1,35 @@
-# Instagram Content Engine
+# Instagram Meme Engine
 
-This project orchestrates multiple AI agents to research trends, generate content, design visuals, and publish to Instagram automatically.
+A fully automated Instagram meme account. GitHub Actions cron jobs fetch top
+Reddit memes (videos and images), build 9:16 reels, and publish them via the
+Instagram API — no server, no manual steps. A Next.js dashboard (Google-auth
+gated, hosted on Vercel) shows analytics and triggers jobs on demand.
 
-## Structure
+## How it works
 
-- `dashboard.py` - Streamlit dashboard (main interface)
-- `orchestrator.py` - Coordinates all agents; typically run on a schedule
-- `config.yaml` - Configuration for API keys, niche, etc.
+- `meme.yml` (2×/day) — alternates **Reddit video memes** (RSS → v.redd.it HLS →
+  ffmpeg 9:16 re-frame, original audio) and **image meme reels** (meme-api.com +
+  CC music bed). Publishes as a reel, then reposts it to Stories.
+- `comment_reply.yml` (2h) — Gemini replies to new comments on-brand.
+- `analytics.yml` (weekly) — Meta insights → AI analysis + follower trend.
+- `linkbio.yml` (daily) — rebuilds the GitHub Pages link-in-bio.
+- `refresh_token.yml` (monthly) — refreshes the Instagram token.
 
-### Agents
+Full architecture: `CLAUDE.md`. Operating guide: `FLOW.md`. Roadmap: `tasks.md`.
 
-Located in `agents/`:
-- `research_agent.py` - Trend scanning + idea generation
-- `content_agent.py` - Full content generation
-- `design_agent.py` - Image/carousel creation
-- `publishing_agent.py` - Instagram API publishing
-- `analytics_agent.py` - Metrics pulling + AI analysis
-- `hashtag_agent.py` - Hashtag set generation
+## Layout
 
-### Other
+- `agents/` — meme fetch/build, publishing, comments, analytics, music, DB
+- `scripts/` — entrypoints the workflows run (`post_meme.py`, `build_linkbio.py`, …)
+- `dashboard-web/` — Next.js control panel (see its README for Vercel setup)
+- `config.yaml` — non-secret runtime config (subreddits, brand, bio links)
+- `fonts/`, `generated_content/` — assets and build output
 
-- `templates/` - HTML templates for posts
-- `generated_content/` - Output directory for generated images
-- `data/` - SQLite database
-- `fonts/` - Custom fonts for image generation
+## Getting started
 
-## Getting Started
-
-1. Create a virtual environment and install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Populate `.env` with your API keys.
-3. Configure `config.yaml` as needed.
-4. Run the dashboard or orchestrator to begin.
+1. `pip install -r requirements.txt`
+2. Populate `.env` (see the env-var list in `CLAUDE.md`).
+3. `python -m scripts.post_meme` builds and publishes one meme reel.
 
 ## License
 

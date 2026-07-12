@@ -6,14 +6,22 @@ import { NextResponse } from "next/server";
 const ALLOWED = new Set([
   "meme.yml", "comment_reply.yml", "analytics.yml", "linkbio.yml",
 ]);
+// Per-workflow dispatch inputs the dashboard may set (everything else is dropped).
+const ALLOWED_INPUTS: Record<string, Record<string, Set<string>>> = {
+  "meme.yml": { format: new Set(["auto", "video", "images"]) },
+};
 
 export async function POST(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const { workflow } = await req.json().catch(() => ({}));
+  const { workflow, inputs } = await req.json().catch(() => ({}));
   if (!ALLOWED.has(workflow)) {
     return NextResponse.json({ error: "unknown workflow" }, { status: 400 });
+  }
+  const cleanInputs: Record<string, string> = {};
+  for (const [k, v] of Object.entries(inputs || {})) {
+    if (ALLOWED_INPUTS[workflow]?.[k]?.has(String(v))) cleanInputs[k] = String(v);
   }
   const pat = process.env.GH_PAT;
   const repo = process.env.GH_REPO;
@@ -30,7 +38,7 @@ export async function POST(req: Request) {
         Accept: "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
       },
-      body: JSON.stringify({ ref: "main" }),
+      body: JSON.stringify({ ref: "main", inputs: cleanInputs }),
     },
   );
   if (r.status !== 204) {

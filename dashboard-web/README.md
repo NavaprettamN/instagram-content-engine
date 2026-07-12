@@ -1,11 +1,15 @@
-# Content Engine — Web Dashboard
+# Meme Engine — Web Dashboard
 
-A small Next.js control panel for the Instagram content engine. Google-login
-gated (locked to your email), reads Supabase server-side, and can trigger the
-GitHub Actions jobs on demand. Replaces the old Streamlit app.
+A Next.js control panel for the Instagram meme engine, hosted on Vercel.
+Google-login gated (owner's email is the built-in admin), reads Supabase and
+the Instagram API server-side, and triggers the GitHub Actions jobs on demand.
 
-Pages: **Overview** (followers, top posts, latest AI analysis), **Content Queue**
-(every idea + status), **Controls** (run any pipeline job now).
+Pages:
+- **Overview** — followers + weekly delta, engagement KPIs, interactive
+  follower-growth chart, recent-posts grid with live likes/comments, top
+  performers, latest AI analysis.
+- **Controls** — run any job now; the meme job has a format picker
+  (Auto / Video / Images) that maps to `meme.yml`'s `format` dispatch input.
 
 ## One-time setup (~15 min)
 
@@ -24,9 +28,11 @@ Pages: **Overview** (followers, top posts, latest AI analysis), **Content Queue*
 3. Add Environment Variables (see `.env.example`):
    - `AUTH_SECRET` — `openssl rand -base64 32`
    - `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` — from step 1
-   - `ALLOWED_EMAILS` — your Google email(s), comma-separated
    - `SUPABASE_URL`, `SUPABASE_KEY` — same as the pipeline (service_role key)
-   - `GH_PAT` (workflow scope) + `GH_REPO` — optional, enables the Controls page
+   - `META_ACCESS_TOKEN`, `INSTAGRAM_USER_ID` — enables the recent-posts grid
+     (optional; the page degrades gracefully without them)
+   - `GH_PAT` (workflow scope) + `GH_REPO` (`owner/repo`) — enables Controls
+   - `ALLOWED_EMAILS` — optional; defaults to the owner's email in `auth.ts`
 4. Deploy. Then go back to the Google client (step 1.4) and add the real
    `https://YOUR-APP.vercel.app/...` redirect URI.
 
@@ -39,7 +45,10 @@ npm run dev                  # http://localhost:3000
 ```
 
 ## Security notes
-- The Supabase **service_role** key lives only in server env vars — it is never
-  sent to the browser (all queries run in server components / API routes).
-- Only emails in `ALLOWED_EMAILS` can sign in; everyone else is rejected at the
-  Google callback.
+- The Supabase **service_role** key and the Instagram token live only in server
+  env vars — never sent to the browser (all reads run in server components /
+  API routes).
+- Sign-in is allowlist-only: `ALLOWED_EMAILS`, defaulting to the owner's email.
+  Everyone else is rejected at the Google callback.
+- The trigger API only dispatches allowlisted workflows and allowlisted input
+  values.

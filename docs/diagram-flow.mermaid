@@ -1,0 +1,21 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': 'transparent', 'lineColor': '#ffffff', 'primaryColor': '#1e293b', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#64748b', 'secondaryColor': '#0f172a', 'tertiaryColor': '#334155', 'fontSize': '13px'}}}%%
+flowchart LR
+    Start([Daily 07:00 UTC]) --> R[Research]
+    R -->|RSS + Reddit + Trends| G[Gemini 2.5 Flash]
+    G -->|5 ideas, approve top 3| DB[(Supabase DB)]
+    DB -->|Approved ideas| CG[Content Generation]
+    CG -->|every 2h| DA[Design]
+    DA -->|1080x1080 PNGs| IH[imgbb Hosting]
+    IH -->|public URLs| PB{Publish}
+    PB -->|08:00 / 14:00 / 20:00 UTC| IG[Instagram API]
+    IG -->|30 min later| CR[Comment Reply]
+    CR -->|every 2h| IG
+    
+    IG -->|weekly| AN[Analytics]
+    AN -->|Sunday 20:00| FB[Feedback Loop]
+    FB -.->|informs next research| R
+    
+    IG -->|weekly| RL[Reel Pipeline]
+    RL -->|Sunday 16:00| IG
+    
+    TO[Token Refresh] -.->|monthly| IG

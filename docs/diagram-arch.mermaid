@@ -1,0 +1,63 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': 'transparent', 'lineColor': '#ffffff', 'primaryColor': '#1e293b', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#64748b', 'secondaryColor': '#0f172a', 'tertiaryColor': '#334155', 'fontSize': '13px'}}}%%
+flowchart TB
+    subgraph Scheduler[GitHub Actions Cron]
+        RC[research.yml - 07:00 UTC]
+        GC[generate.yml - every 2h]
+        PC[publish.yml - 08/14/20 UTC]
+        CC[comment_reply.yml - every 2h]
+        AC[analytics.yml - Sunday 20:00]
+    end
+
+    subgraph Research[Research]
+        R1[RSS Feeds]
+        R2[Reddit API]
+        R3[TrendAgent - YouTube/Google]
+        R4[Gemini 2.5 Flash - 5 ideas]
+    end
+
+    subgraph Content[Content Pipeline]
+        C1[ContentAgent - Carousel JSON]
+        C2[DesignAgent - Pillow PNGs]
+        C3[HashtagAgent - 3 rotating sets]
+    end
+
+    subgraph Publishing[Publishing]
+        P1[imgbb Image Hosting]
+        P2[PublishingAgent]
+        P3[Instagram Graph API]
+    end
+
+    subgraph Engagement[Engagement]
+        E1[Comment Reply Agent]
+        E2[Story Promo Bot]
+    end
+
+    subgraph Analytics[Analytics]
+        A1[Meta Insights]
+        A2[Gemini Weekly Analysis]
+        A3[Performance Feedback Loop]
+    end
+
+    subgraph Storage[Database]
+        DB[(Supabase content_ideas)]
+    end
+
+    subgraph Dashboard[Dashboard]
+        D1[Streamlit UI - Approval/Analytics/Settings]
+    end
+    
+    subgraph Maintenance[Maintenance]
+        T1[Token Refresh - monthly]
+    end
+
+    RC --> Research --> Content --> Publishing
+    PC --> Publishing
+    CC --> Engagement
+    AC --> Analytics
+
+    Content -.-> DB
+    Publishing -.-> DB
+    Analytics -.->|feedback| Research
+    Analytics -.-> DB
+    Dashboard -.-> DB
+    Maintenance -.-> Publishing

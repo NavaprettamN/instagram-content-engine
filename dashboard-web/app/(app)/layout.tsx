@@ -8,14 +8,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="shell">
       <aside className="sidebar">
-        <div className="brand">Content <span>Engine</span></div>
+        <div className="brand">
+          <div className="brand-mark">😂</div>
+          <div>Meme <span>Engine</span></div>
+        </div>
         <nav className="nav">
-          <NavLink href="/overview">Overview</NavLink>
-          <NavLink href="/controls">Controls</NavLink>
+          <NavLink href="/overview"><span className="ico">📊</span>Overview</NavLink>
+          <NavLink href="/controls"><span className="ico">🎛️</span>Controls</NavLink>
         </nav>
         <div className="who">
-          Signed in as<br />
-          {session.user?.email}
+          <b>{session?.user?.name || "Admin"}</b>
+          {session?.user?.email}
           <form
             action={async () => {
               "use server";
