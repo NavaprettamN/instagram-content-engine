@@ -16,5 +16,9 @@
   v.redd.it HLS/DASH playlists work (details in CLAUDE.md "Reddit access").
 - Local ffmpeg (homebrew) lacks the drawtext filter — burn text via PIL
   overlay PNG + overlay filter instead (meme_agent does this).
+- v.redd.it video memes are frequently SILENT (no audio stream); `-map 0:a?`
+  used to ship them soundless. `build_video` now detects this via
+  `MemeAgent.has_audio()` and adds a CC music bed (`add_music_bed`) so a video
+  reel never posts silent. ffmpeg calls go through `_run_ffmpeg` (300s timeout).
 - Background Bash tasks may start in a different cwd than the last foreground
   `cd`; use absolute paths in `run_in_background` commands.
