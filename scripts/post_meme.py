@@ -81,8 +81,10 @@ def main():
     url = upload_video(reel)
     print(f"Meme reel hosted: {url}")
 
-    # persist seen ids before publishing so a publish retry can't double-use memes
-    set_config(SEEN_KEY, ",".join(dict.fromkeys(used_ids + seen))[:SEEN_CAP * 12])
+    # persist seen ids before publishing so a publish retry can't double-use memes.
+    # Cap by id COUNT (not chars) so truncation can't splice a partial id.
+    kept = list(dict.fromkeys(used_ids + seen))[:SEEN_CAP]
+    set_config(SEEN_KEY, ",".join(kept))
 
     publisher = PublishingAgent(config)
     result = publisher.publish_reel(url, caption)

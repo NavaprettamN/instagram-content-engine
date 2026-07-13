@@ -24,6 +24,21 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 W, H = 1080, 1920
 IMG_EXT = (".jpg", ".jpeg", ".png", ".webp")
+# Cap ffmpeg so a corrupt/stalled HLS pull can't hang the run until the Actions
+# 6h job kill. A 9:16 re-encode of a short reel is well under this.
+FFMPEG_TIMEOUT = 300
+
+
+def _run_ffmpeg(cmd):
+    """subprocess.run(ffmpeg) with a hard timeout; a timeout surfaces as a
+    non-zero-style result so callers raise their normal 'ffmpeg failed' error."""
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True,
+                              timeout=FFMPEG_TIMEOUT)
+    except subprocess.TimeoutExpired as e:
+        return subprocess.CompletedProcess(
+            cmd, 1, e.stdout or "",
+            f"ffmpeg timed out after {FFMPEG_TIMEOUT}s")
 # Reddit blocks unauthenticated JSON (403) from most IPs now; meme-api.com is a
 # free, keyless proxy that returns top image posts from a subreddit as JSON.
 MEME_API = "https://meme-api.com/gimme"
@@ -271,7 +286,7 @@ class MemeAgent:
                 "-c:a", "aac", "-b:a", "128k", "-t", f"{total:.2f}",
                 "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                 "-movflags", "+faststart", out_path]
-        r = subprocess.run(cmd, capture_output=True, text=True)
+        r = _run_ffmpeg(cmd)
         if r.returncode != 0:
             raise RuntimeError(f"meme reel ffmpeg failed:\n{r.stderr[-1200:]}")
         return out_path
@@ -369,7 +384,7 @@ class MemeAgent:
                "-t", str(self.video_max_seconds),
                "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", out_path]
-        r = subprocess.run(cmd, capture_output=True, text=True)
+        r = _run_ffmpeg(cmd)
         if r.returncode != 0:
             raise RuntimeError(f"video reel ffmpeg failed:\n{r.stderr[-1200:]}")
         return out_path

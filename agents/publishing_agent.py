@@ -120,6 +120,9 @@ class PublishingAgent:
                 if status.get("status_code") == "ERROR":
                     return {"error": {"message": "story container ERROR (video fetch failed)"}}
                 time.sleep(10)
+            else:
+                # never reached FINISHED — don't publish a half-processed container
+                return {"error": {"message": "story container not FINISHED (timed out)"}}
         else:
             time.sleep(5)
         result = requests.post(
@@ -143,6 +146,7 @@ class PublishingAgent:
     def _rehost(self, video_url):
         """Download a hosted MP4 and re-upload it under a new name -> fresh URL.
         Returns None on any failure (caller keeps the original error)."""
+        tmp = None
         try:
             import tempfile
             r = requests.get(video_url, timeout=60)
@@ -154,6 +158,9 @@ class PublishingAgent:
         except Exception as e:
             print(f"publish_reel: re-host failed ({e})")
             return None
+        finally:
+            if tmp and os.path.exists(tmp):
+                os.remove(tmp)
 
     def _publish_reel_once(self, video_url, caption, cover_url=None):
         data = {

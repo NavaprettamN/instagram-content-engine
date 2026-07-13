@@ -6,7 +6,12 @@ name: Meme Reel — build + auto-publish
 # audio can't be attached via the API — the trade for zero manual work.)
 on:
   schedule:
-    - cron: "0 6,15 * * *"  # 06:00 & 15:00 UTC
+    # 5 posts/day, tuned to Asia/Kolkata (IST = UTC+5:30) active hours.
+    - cron: "0 3 * * *"    # 08:30 IST — morning
+    - cron: "30 7 * * *"   # 13:00 IST — lunch
+    - cron: "0 12 * * *"   # 17:30 IST — evening commute
+    - cron: "0 15 * * *"   # 20:30 IST — prime
+    - cron: "30 17 * * *"  # 23:00 IST — late night
   workflow_dispatch:
     inputs:
       format:
