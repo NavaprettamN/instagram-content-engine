@@ -25,18 +25,43 @@ from agents import notify
 
 SEEN_KEY = "seen_memes"
 SEEN_CAP = 300
+# Rotate BOTH genre and track by the persistent counter so meme music stays
+# varied and upbeat (the mood tags' all-time-popular pool is classical piano —
+# wrong vibe for memes; these genres on popularity_month are energetic).
+MUSIC_GENRES = ["pop", "electronic", "funk", "dance", "happy"]
 
 
-def build_video(agent, config, seen):
-    """Fresh Reddit video -> (path, caption, used_ids) or None."""
+def _pick_meme_music(config, base, seed):
+    """A CC music bed for a meme reel, or None. Genre+track rotate by the seed."""
+    return MusicAgent(config).pick_track(
+        "meme", f"{base}/meme_music.mp3", seed=seed,
+        tags=MUSIC_GENRES[seed % len(MUSIC_GENRES)], order="popularity_month")
+
+
+def build_video(agent, config, seen, seed):
+    """Fresh Reddit video -> (path, caption, used_ids) or None.
+
+    Video memes keep their original Reddit audio (usually the joke). But many
+    v.redd.it clips are silent — for those, add a CC music bed like image reels
+    do, so a video reel never ships soundless."""
     videos = agent.fetch_videos(limit=1, seen=seen)
     if not videos:
         print("No fresh Reddit video found — falling back to image memes.")
         return None
     v = videos[0]
-    reel = agent.build_video_reel(v, f"{config['output_dir']}/meme_reel.mp4")
+    base = config["output_dir"]
+    reel = agent.build_video_reel(v, f"{base}/meme_reel.mp4")
+    caption = agent.caption([v])
+    if not agent.has_audio(reel):
+        print("Source clip is silent — adding a CC music bed.")
+        music = _pick_meme_music(config, base, seed)
+        if music:
+            reel = agent.add_music_bed(reel, music["path"], f"{base}/meme_reel_music.mp4")
+            caption = f"{caption}\n\n{music['credit']}"  # CC attribution
+        else:
+            print("No music available — video reel will be silent.")
     print(f"Built video reel from r/ post by u/{v['author']}: {v['title'][:60]}")
-    return reel, agent.caption([v]), [v["id"]]
+    return reel, caption, [v["id"]]
 
 
 def build_images(agent, config, seen, seed):
@@ -45,13 +70,7 @@ def build_images(agent, config, seen, seed):
     if not memes:
         return None
     base = config["output_dir"]
-    # Rotate BOTH genre and track by the persistent counter so meme music stays
-    # varied and upbeat (the mood tags' all-time-popular pool is classical piano —
-    # wrong vibe for memes; these genres on popularity_month are energetic).
-    genres = ["pop", "electronic", "funk", "dance", "happy"]
-    music = MusicAgent(config).pick_track(
-        "meme", f"{base}/meme_music.mp3", seed=seed,
-        tags=genres[seed % len(genres)], order="popularity_month")
+    music = _pick_meme_music(config, base, seed)
     reel = agent.build_reel(memes, f"{base}/meme_reel.mp4",
                             music_path=(music["path"] if music else None))
     caption = agent.caption(memes)
@@ -70,7 +89,7 @@ def main():
     set_config("meme_music_seed", seed + 1)
 
     fmt = os.environ.get("MEME_FORMAT") or ("video" if seed % 2 else "images")
-    built = build_video(agent, config, seen) if fmt == "video" else None
+    built = build_video(agent, config, seen, seed) if fmt == "video" else None
     if built is None:
         built = build_images(agent, config, seen, seed)
     if built is None:

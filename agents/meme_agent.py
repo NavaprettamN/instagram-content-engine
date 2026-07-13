@@ -389,6 +389,27 @@ class MemeAgent:
             raise RuntimeError(f"video reel ffmpeg failed:\n{r.stderr[-1200:]}")
         return out_path
 
+    def has_audio(self, path):
+        """True if the file has an audio stream. Many v.redd.it clips are silent;
+        we detect that so a music bed can be added instead of shipping silence."""
+        r = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "a",
+             "-show_entries", "stream=codec_type", "-of", "csv=p=0", path],
+            capture_output=True, text=True)
+        return "audio" in r.stdout
+
+    def add_music_bed(self, video_path, music_path, out_path):
+        """Mux a looping music bed onto a silent video (copies video, no re-encode).
+        `-shortest` trims the looped music to the video length. Returns out_path."""
+        cmd = ["ffmpeg", "-y", "-i", video_path, "-stream_loop", "-1", "-i", music_path,
+               "-map", "0:v", "-map", "1:a", "-c:v", "copy",
+               "-c:a", "aac", "-b:a", "128k", "-shortest",
+               "-movflags", "+faststart", out_path]
+        r = _run_ffmpeg(cmd)
+        if r.returncode != 0:
+            raise RuntimeError(f"add_music_bed ffmpeg failed:\n{r.stderr[-1200:]}")
+        return out_path
+
     def caption(self, memes):
         """Share-optimized caption. Prefers an LLM-written hook + 'send to a
         friend' CTA (targets DM sends, the #1 2026 reach signal); falls back to
