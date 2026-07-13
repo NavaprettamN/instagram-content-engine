@@ -32,3 +32,8 @@ yarn-error.log*
 *.log
 remotion/public/gen/
 ai_posts_to_delete.md
+
+# Agent tooling scaffolding (local only)
+.agents/
+.opencode/
+skills-lock.json
