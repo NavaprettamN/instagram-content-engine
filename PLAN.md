@@ -51,15 +51,26 @@ first-come. Verified live: 48 candidates → top 4 by ups (24k/17k/11k/11k).
 Adds `score` to each meme dict. *Note: true "velocity" (ups/hour) needs post age
 meme-api doesn't expose free; raw ups ranking is the honest free proxy.*
 
-## I2 — Shareability upgrades (free, NEXT)
-Target the #1 signal (sends) with zero spend:
-- **Gemini-written captions** (free Flash, Groq fallback) from the meme title →
-  punchy hook + explicit "send this to someone who…" / "tag a friend who…" CTA.
-  Fallback to the current static caption. Wire into `MemeAgent.caption`.
-- **Hook text overlay** on the first frame (bold top caption) — the 1.5s hook
-  the research says decides distribution. Free (PIL, fonts already bundled).
-- Consider longer image reels (title cards / 2–3 beat setups) to lift watch
-  time vs flat 6s stills — test, don't assume.
+## I2 — Shareability upgrades (SHIPPED 2026-07-13, free)
+Targets the #1 signal (sends) with zero spend. `MemeAgent._share_copy` makes one
+cached JSON call to Gemini 2.5 Flash (free vision, Groq text-only fallback) that
+returns `{hook, caption}`:
+- **Image-grounded**: sends the LEAD meme's actual image to Gemini (not the
+  useless Reddit title like "Martin Luther King") so copy matches the real joke.
+  Added `image_path` support to `_llm.generate_text`.
+- **Hook overlay** drawn on the first frame only (`_draw_hook`, bold + outlined,
+  top band) — the 1.5s scroll-stopper.
+- **Caption** ends in a "tag someone who…" / "send this to the friend who…" CTA.
+- **Tone guardrail** in the prompt (sensitive topics stay respectful) — fixed an
+  early bug where set-level copy mismatched the lead frame.
+- **Best-effort**: any LLM failure → static caption, publishing never blocks.
+- Verified live: MLK meme → hook "Character over everything" + respectful CTA
+  caption; video path (no image) generates from title; full reel self-check OK.
+
+Open question for later: the reel still stitches 4 *unrelated* top memes, so the
+hook/caption describe only the lead one. Moving to **1 strong meme per reel**
+would make hook+caption+frame fully coherent and lift watch-time focus — a
+content-format decision to raise with the user, not assumed here.
 
 ## I3 — Monetization funnel (free scaffolding, activate at scale)
 - **Now (0–10k):** build the conversion mechanism early — link-in-bio → an

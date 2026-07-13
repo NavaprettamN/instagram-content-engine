@@ -41,17 +41,40 @@ def _groq(prompt, system, json_response, temperature):
     return json.loads(text) if json_response else text
 
 
-def generate_text(prompt, system=None, json_response=False, temperature=0.7):
+def _image_part(image_path):
+    """types.Part for a local image, or None if unreadable. Gemini 2.5 Flash is
+    multimodal on the free tier, so vision input costs nothing."""
+    try:
+        with open(image_path, "rb") as f:
+            data = f.read()
+        ext = os.path.splitext(image_path)[1].lower()
+        mime = {".png": "image/png", ".webp": "image/webp"}.get(ext, "image/jpeg")
+        return types.Part.from_bytes(data=data, mime_type=mime)
+    except Exception:
+        return None
+
+
+def generate_text(prompt, system=None, json_response=False, temperature=0.7,
+                  image_path=None):
     """
     Gemini 2.5 Flash primary, with retry on 503 (high demand). On a 429
     (quota/rate) it falls straight to the free Groq fallback instead of retrying
     for minutes — retries can't beat a daily cap. Set json_response=True for a dict.
+
+    `image_path` adds a local image as vision input (free on Flash). The Groq
+    fallback is text-only, so it silently drops the image if Gemini is exhausted.
     """
     cfg = types.GenerateContentConfig(temperature=temperature)
     if json_response:
         cfg.response_mime_type = "application/json"
     if system:
         cfg.system_instruction = system
+
+    contents = prompt
+    if image_path:
+        part = _image_part(image_path)
+        if part is not None:
+            contents = [part, prompt]
 
     delays = [10, 30, 60]  # transient-503 backoff only
     last_error = None
@@ -61,7 +84,7 @@ def generate_text(prompt, system=None, json_response=False, temperature=0.7):
             time.sleep(delay)
         try:
             response = _get_client().models.generate_content(
-                model="gemini-2.5-flash", contents=prompt, config=cfg,
+                model="gemini-2.5-flash", contents=contents, config=cfg,
             )
             return json.loads(response.text) if json_response else response.text
         except ServerError as e:

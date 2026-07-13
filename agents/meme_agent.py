@@ -45,12 +45,81 @@ class MemeAgent:
             ["Unexpected", "funny", "ContagiousLaughter", "AnimalsBeingDerps"])
         self.video_max_seconds = self.config.get("meme_video_max_seconds", 45)
         self.video_min_seconds = self.config.get("meme_video_min_seconds", 3)
+        self.niche = self.config.get("niche", "memes & relatable humor")
+        self.brand_voice = self.config.get("brand_voice", "")
+        # LLM-written {hook, caption} cached per meme set so build_reel (hook) and
+        # caption() (caption) don't each trigger a separate call.
+        self._copy_cache = {}
 
     def _font(self, size):
         try:
             return ImageFont.truetype(self.font, size)
         except Exception:
             return ImageFont.load_default(size=size)
+
+    def _wrap(self, draw, text, font, max_w):
+        """Greedy word-wrap `text` to lines that fit within max_w pixels."""
+        lines, cur = [], ""
+        for word in text.split():
+            trial = f"{cur} {word}".strip()
+            if draw.textlength(trial, font=font) <= max_w or not cur:
+                cur = trial
+            else:
+                lines.append(cur)
+                cur = word
+        if cur:
+            lines.append(cur)
+        return lines
+
+    def _share_copy(self, memes):
+        """LLM-written {'hook','caption'} for the LEAD meme (memes[0] — the one
+        the hook sits on), engineered for DM shares (the #1 2026 reach signal).
+        Sends the actual meme image to Gemini (free vision) so the copy matches
+        the real joke, not the often-useless Reddit title. Best-effort + cached:
+        returns None on any failure so callers fall back to static copy."""
+        if not memes:
+            return None
+        key = tuple(m.get("id", "") for m in memes)
+        if key in self._copy_cache:
+            return self._copy_cache[key]
+
+        lead = memes[0]
+        result = None
+        try:
+            from agents._llm import generate_text
+            system = (
+                "You are the editor of a viral Instagram meme page. In 2026, DM "
+                "sends are the #1 reach signal, so your only job is to make someone "
+                "instantly think of a specific friend and send them THIS meme. "
+                f"Niche: {self.niche}. Voice: {self.brand_voice or 'casual, funny, meme-fluent, never corporate'}. "
+                "If the meme touches a sensitive or serious topic (race, politics, "
+                "tragedy, religion), keep the copy warm and respectful — never "
+                "flippant. The hook and caption must fit THIS specific meme."
+            )
+            prompt = (
+                f"The meme image is attached. (Reddit title for context: "
+                f"\"{lead.get('title', '')}\".)\n\n"
+                "Read what's actually happening in the meme, then return JSON with "
+                "exactly two string fields:\n"
+                '- "hook": a 3-6 word on-screen text hook shown on this frame that '
+                "stops the scroll (relatable / curiosity / POV style), matching the "
+                "meme. Max 38 characters. No hashtags, no quotes.\n"
+                '- "caption": a 1-2 line Instagram caption about this meme that ENDS '
+                "in a 'tag someone who…' or 'send this to the friend who…' CTA. "
+                "Under 140 characters. At most one emoji. No hashtags.\n\n"
+                "Return ONLY the JSON."
+            )
+            data = generate_text(prompt, system=system, json_response=True,
+                                 temperature=0.9, image_path=lead.get("path"))
+            hook = str((data or {}).get("hook", "")).strip().strip('"')
+            cap = str((data or {}).get("caption", "")).strip().strip('"')
+            if cap:
+                result = {"hook": hook[:60], "caption": cap[:280]}
+        except Exception as e:
+            print(f"MemeAgent: share-copy LLM failed ({str(e)[:90]}) — static fallback.")
+
+        self._copy_cache[key] = result
+        return result
 
     def _meme_id(self, m):
         # image filename (e.g. i.redd.it/<id>.png) is a stable per-post key
@@ -118,8 +187,26 @@ class MemeAgent:
             seen.add(mid)
         return out
 
-    def _compose_frame(self, meme, dest):
-        """Blurred cover bg + centered meme + credit -> 1080x1920 PNG."""
+    def _draw_hook(self, draw, hook):
+        """Bold, outlined hook banner in the top band (the 1.5s scroll-stopper).
+        The meme is centered at ≤74% height, so the top ~250px band is free."""
+        f = self._font(58)
+        lines = self._wrap(draw, hook, f, int(W * 0.9))
+        if len(lines) > 2:  # too long at 58 — shrink and re-wrap, cap at 2 lines
+            f = self._font(46)
+            lines = self._wrap(draw, hook, f, int(W * 0.9))[:2]
+        y = 56
+        for line in lines:
+            tw = draw.textlength(line, font=f)
+            x = (W - tw) // 2
+            for dx, dy in ((-3, -3), (3, -3), (-3, 3), (3, 3), (0, 3), (0, -3)):
+                draw.text((x + dx, y + dy), line, font=f, fill=(0, 0, 0))
+            draw.text((x, y), line, font=f, fill=(255, 255, 255))
+            y += f.size + 8
+
+    def _compose_frame(self, meme, dest, hook=None):
+        """Blurred cover bg + centered meme + credit -> 1080x1920 PNG.
+        `hook` (first frame only) draws a scroll-stopping banner up top."""
         try:
             src = Image.open(meme["path"]).convert("RGB")
         except Exception as e:
@@ -147,16 +234,19 @@ class MemeAgent:
         f = self._font(34)
         tw = d.textlength(credit, font=f)
         d.text(((W - tw) // 2, H - 90), credit, font=f, fill=(200, 200, 210))
+        if hook:
+            self._draw_hook(d, hook)
         bg.save(dest)
         return dest
 
     def build_reel(self, memes, out_path, music_path=None):
         """Compose memes into a slideshow reel. Returns out_path or raises."""
         os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+        hook = (self._share_copy(memes) or {}).get("hook")  # first frame only
         frames = []
         for i, m in enumerate(memes):
             fp = os.path.join(self.cache, f"frame_{m['id']}.png")
-            if self._compose_frame(m, fp):
+            if self._compose_frame(m, fp, hook=hook if i == 0 else None):
                 frames.append(fp)
         if not frames:
             raise RuntimeError("no meme frames composed")
@@ -285,12 +375,20 @@ class MemeAgent:
         return out_path
 
     def caption(self, memes):
-        """A light caption; credits sources (repost hygiene) + save/follow CTA."""
+        """Share-optimized caption. Prefers an LLM-written hook + 'send to a
+        friend' CTA (targets DM sends, the #1 2026 reach signal); falls back to
+        a static CTA if the LLM is unavailable. Always credits sources + follow."""
         handle = self.config.get("instagram_handle", "")
         srcs = ", ".join(dict.fromkeys(f"u/{m['author']}" for m in memes if m.get("author")))
-        cta = f"Follow {handle} for daily memes 😂 · Save & send to a friend"
+        copy = self._share_copy(memes)
+        if copy and copy.get("caption"):
+            body = copy["caption"]
+            follow = f"\n\nFollow {handle} for daily memes 😂" if handle else ""
+        else:
+            body = f"Follow {handle} for daily memes 😂 · Save & send to a friend"
+            follow = ""
         credit = f"\n\nCredit: {srcs} (via Reddit)" if srcs else ""
-        return f"{cta}{credit}"
+        return f"{body}{follow}{credit}"
 
 
 if __name__ == "__main__":

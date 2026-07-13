@@ -82,9 +82,17 @@ AI/value-content machine instead of tuning it:
   meme accounts on one engine (plan later, PLAN.md I4). SHIPPED I1: MemeAgent
   .fetch_memes now over-fetches 50/sub, ranks by real Reddit upvotes, floors at
   meme_min_score, downloads top N (fallback to best). Verified live (48→top4 by
-  ups). NEXT (free): I2 Gemini-written share-CTA captions + first-frame hook
-  overlay (target sends = #1 2026 signal). NOT doing: Veo/paid image gen (not
-  free), narrated-story format (would break memes-only).
+  ups). NOT doing: Veo/paid image gen (not free), narrated-story format (would
+  break memes-only).
+- **I2 shareability (SHIPPED 2026-07-13, free)** — MemeAgent._share_copy: one
+  cached Gemini 2.5 Flash call (free VISION — sends the lead meme's actual image,
+  not the junk Reddit title) returns {hook, caption}. Hook drawn on frame 0
+  (_draw_hook, bold+outlined); caption ends in a "send this to the friend who…"
+  CTA → targets DM sends (#1 2026 signal). Added image_path to _llm.generate_text
+  (Groq fallback is text-only). Tone guardrail for sensitive memes. Static
+  fallback if LLM down. Verified live (MLK meme → coherent respectful copy; video
+  title-only path; full reel self-check OK). Open Q for user: move to 1 meme/reel
+  so hook+caption+frame are fully coherent (currently 4 unrelated memes/reel).
 
 ### 💰 Monetization plan (meme account, 2026-07-11 ideation)
 Meme pages make money from **attention arbitrage** — the product is reach.
