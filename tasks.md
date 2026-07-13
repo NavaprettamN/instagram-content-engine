@@ -75,6 +75,16 @@ AI/value-content machine instead of tuning it:
   attrs don't resolve var()). Fixed brand mark, chart tooltip, post-type badge,
   tag colors for dark. Build + typecheck pass; dark CSS + init script verified
   served locally. Pushed to main.
+- **Strategy session + smarter meme selection** (2026-07-13) — researched
+  content/video/reach/monetization (web). Decisions locked in PLAN.md Phase I:
+  memes-only PER ACCOUNT, free-until-revenue, slight monetizable niche tilt,
+  fully-automated audio, and the BIG future direction = MULTIPLE single-niche
+  meme accounts on one engine (plan later, PLAN.md I4). SHIPPED I1: MemeAgent
+  .fetch_memes now over-fetches 50/sub, ranks by real Reddit upvotes, floors at
+  meme_min_score, downloads top N (fallback to best). Verified live (48→top4 by
+  ups). NEXT (free): I2 Gemini-written share-CTA captions + first-frame hook
+  overlay (target sends = #1 2026 signal). NOT doing: Veo/paid image gen (not
+  free), narrated-story format (would break memes-only).
 
 ### 💰 Monetization plan (meme account, 2026-07-11 ideation)
 Meme pages make money from **attention arbitrage** — the product is reach.

@@ -57,46 +57,65 @@ class MemeAgent:
         return os.path.splitext(os.path.basename(m.get("url", "")))[0] or (m.get("postLink") or "")
 
     def fetch_memes(self, limit=4, seen=None):
-        """Return [{'path','title','author','permalink','id'}] top image memes
-        via meme-api.com (keyless Reddit proxy)."""
+        """Return the top image memes by upvotes: [{'path','title','author',
+        'permalink','id','score'}].
+
+        meme-api.com returns a *random* sample from a sub's hot listing, but each
+        post's `ups` is the real Reddit score — so we over-fetch a big pool across
+        all subs, rank by upvotes, keep only those clearing `meme_min_score`, and
+        download the top `limit`. This makes selection favour already-proven memes
+        instead of whatever happened to come back first. Falls back to the best
+        available if too few clear the floor (best-effort: never post nothing)."""
         seen = set(seen or [])
-        out = []
+        # 1) Build a candidate pool across subs WITHOUT downloading yet.
+        best = {}  # mid -> (ups, meme_json) keeping the highest-scored dupe
         for sub in self.subreddits:
-            if len(out) >= limit:
-                break
             try:
-                r = requests.get(f"{MEME_API}/{sub}/20", timeout=20,
+                r = requests.get(f"{MEME_API}/{sub}/50", timeout=20,
                                  headers={"User-Agent": "Mozilla/5.0"})
                 if not r.ok:
                     continue
                 for m in r.json().get("memes", []):
                     url = m.get("url", "")
                     mid = self._meme_id(m)
-                    # meme-api's `ups` is unreliable (random hot sample), so scoring
-                    # isn't gated here — YOU are the quality gate at notification-
-                    # publish time. Just skip NSFW/spoiler/dupes/non-images.
                     if (m.get("nsfw") or m.get("spoiler")
                             or mid in seen
                             or not url.lower().endswith(IMG_EXT)):
                         continue
-                    dest = os.path.join(self.cache, f"{mid}{os.path.splitext(url)[1][:5]}")
-                    try:
-                        img = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=20)
-                        img.raise_for_status()
-                        if len(img.content) < 5_000:
-                            continue
-                        with open(dest, "wb") as f:
-                            f.write(img.content)
-                    except Exception:
-                        continue
-                    out.append({"path": dest, "title": m.get("title", ""),
-                                "author": m.get("author", ""), "id": mid,
-                                "permalink": m.get("postLink", "")})
-                    seen.add(mid)
-                    if len(out) >= limit:
-                        break
+                    ups = int(m.get("ups") or 0)
+                    if mid not in best or ups > best[mid][0]:
+                        best[mid] = (ups, m)
             except Exception as e:
                 print(f"MemeAgent: r/{sub} failed ({str(e)[:80]})")
+
+        # 2) Rank by upvotes; prefer above the floor, fall back to best available.
+        ranked = sorted(best.values(), key=lambda t: t[0], reverse=True)
+        above = [t for t in ranked if t[0] >= self.min_score]
+        chosen = above if len(above) >= limit else ranked
+        print(f"MemeAgent: {len(ranked)} candidates, {len(above)} over "
+              f"min_score={self.min_score}; picking top {limit} by upvotes")
+
+        # 3) Download the top picks in score order (skip any that fail to fetch).
+        out = []
+        for ups, m in chosen:
+            if len(out) >= limit:
+                break
+            url = m.get("url", "")
+            mid = self._meme_id(m)
+            dest = os.path.join(self.cache, f"{mid}{os.path.splitext(url)[1][:5]}")
+            try:
+                img = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=20)
+                img.raise_for_status()
+                if len(img.content) < 5_000:
+                    continue
+                with open(dest, "wb") as f:
+                    f.write(img.content)
+            except Exception:
+                continue
+            out.append({"path": dest, "title": m.get("title", ""),
+                        "author": m.get("author", ""), "id": mid,
+                        "permalink": m.get("postLink", ""), "score": ups})
+            seen.add(mid)
         return out
 
     def _compose_frame(self, meme, dest):

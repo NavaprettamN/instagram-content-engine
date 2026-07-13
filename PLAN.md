@@ -17,7 +17,69 @@ Phase H entry.
 
 ---
 
-# ▶ ACTIVE: Phase E — Variety + Motion (2026-07-05)
+# ▶ ACTIVE: Phase I — Growth & Monetization machine (2026-07-13)
+
+Strategic session. Researched (web) 4 areas: proven content, AI video via
+Gemini, 2026 reach levers, monetization. **User decisions (locked):**
+
+1. **Memes-only PER ACCOUNT** — do NOT turn this page into multi-content; that
+   defeats the purpose. Improve *which* memes get picked instead.
+2. **Free until revenue** — no Veo, no paid image gen, no paid MCP/data APIs.
+   Money goes back in only once the account earns.
+3. **Slight niche tilt** toward monetizable humor, but comedy-first — must not
+   dilute the content.
+4. **Fully automated audio** stays (baked CC music / original Reddit audio; the
+   trending-audio reach ceiling is accepted, no manual publish flow).
+5. **BIG future direction:** instead of one multi-niche page, run **multiple
+   single-niche meme accounts** (one engine, many accounts). Plan later — see I4.
+
+### Research findings that drive this (2026)
+- **Sends (DM shares) are the #1 Reels signal — 3–5× likes.** Then watch time,
+  then likes. Our 6s static image reels are the weakest shareable format.
+- Shareability = 4 triggers: relatable / useful / emotional / surprising.
+- Veo 3.1 (Gemini API) is good now but **$0.10–0.60/sec, no free tier** →
+  ~$1–3/clip. Out of scope while free-only. Nano Banana images ~$0.04 each
+  (also paid via API). Gemini **Flash text + Flash TTS have free tiers.**
+- Reddit upvotes = built-in virality validation; meme-api's per-post `ups` is
+  real (only the *sample* is random) → rank a big sample by ups.
+
+## I1 — Smarter meme selection (SHIPPED 2026-07-13, free)
+`MemeAgent.fetch_memes` now over-fetches 50/sub, pools across subs, ranks by
+real upvotes, keeps those over `meme_min_score`, downloads the top `limit`
+(graceful fallback to best-available). Picks proven-high-engagement memes vs
+first-come. Verified live: 48 candidates → top 4 by ups (24k/17k/11k/11k).
+Adds `score` to each meme dict. *Note: true "velocity" (ups/hour) needs post age
+meme-api doesn't expose free; raw ups ranking is the honest free proxy.*
+
+## I2 — Shareability upgrades (free, NEXT)
+Target the #1 signal (sends) with zero spend:
+- **Gemini-written captions** (free Flash, Groq fallback) from the meme title →
+  punchy hook + explicit "send this to someone who…" / "tag a friend who…" CTA.
+  Fallback to the current static caption. Wire into `MemeAgent.caption`.
+- **Hook text overlay** on the first frame (bold top caption) — the 1.5s hook
+  the research says decides distribution. Free (PIL, fonts already bundled).
+- Consider longer image reels (title cards / 2–3 beat setups) to lift watch
+  time vs flat 6s stills — test, don't assume.
+
+## I3 — Monetization funnel (free scaffolding, activate at scale)
+- **Now (0–10k):** build the conversion mechanism early — link-in-bio → an
+  offer/email capture. Income tracks the funnel, not follower count.
+- **10–50k:** affiliate links + paid shoutouts ($0.50–1 / 1k followers) + a
+  cheap digital product.
+- **50k+:** sponsored posts (~$1–3k at 100k engaged).
+- Niche tilt (I-decision 3) makes B/C 5–10× easier; keep it comedy-first.
+
+## I4 — Multi-account engine (BIG, plan later)
+Turn the single-account engine into **one machine driving N single-niche meme
+accounts**, each its own IG login + subreddit set + link-in-bio + config row.
+Requires: per-account secrets/token set, account-scoped Supabase config
+(namespaced keys or an `accounts` table), meme.yml matrix over accounts,
+dashboard account switcher. This is the real scale play (one page caps ~$5–10k/mo;
+operators run many). Design doc TBD before building.
+
+---
+
+# ▶ Phase E — Variety + Motion (2026-07-05)
 
 Phases A–C below shipped and the machine runs daily. New user feedback:
 1. **Carousels too consistent** — same look every day reads as a template farm.
